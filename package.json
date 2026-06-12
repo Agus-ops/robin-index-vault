@@ -18,7 +18,8 @@
     "test-stale": "node scripts/test-oracle-stale-withdraw.js",
     "test-dust": "node scripts/test-dust-split.js",
     "test-pause-full": "node scripts/test-pause-full.js",
-    "test-treasury-pause": "node scripts/test-treasury-pause.js"
+    "test-treasury-pause": "node scripts/test-treasury-pause.js",
+    "test-recovery": "node scripts/test-recovery-guards.js"
   },
   "keywords": [],
   "author": "",
