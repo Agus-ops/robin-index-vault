@@ -26,6 +26,7 @@ FeeTreasury rewards bucket -> RewardDistributor -> funded weekly pool -> user al
 
 - `setRewardDistributor`: `0x6c489d63f920f5c6757d64d7447fe76adf3a50fcd871107b169a6d1166d01dff`
 - Temporary AMZN threshold lowering to `0.00001`: `0x3c52b0ff3e9056960f0c289966a9a79b9fe9b9e2c6ada0454f6b61e295fd97ac`
+- Restore AMZN threshold to `0.5`: `0x378994ed256bf061b1819d08a6f351547eff2e2fe3ba4e6616596caed5770c2c`
 - Withdraw AMZN rewards bucket to RewardDistributor: `0x4118e8ca03bb0bcae932c59b595a312d0cfb8610ef2992946388a81c641afd40`
 - Set AMZN token config: `0x4e4df33fd3ba654b04d000fb6677bd4b253cd8eecc3a392bc1a2cfcb07c532ed`
 - Fund week 2945: `0x7f335820859eb77c23c717aaefdbbfbc41a29c50d31c1e07d5bba840826431e8`
@@ -52,4 +53,4 @@ FeeTreasury rewards bucket -> RewardDistributor -> funded weekly pool -> user al
 
 ## Note
 
-AMZN distribution threshold was temporarily lowered from `0.5` to `0.00001` for this testnet smoke test because the rewards bucket was intentionally small.
+AMZN distribution threshold was temporarily lowered from `0.5` to `0.00001` for this testnet smoke test because the rewards bucket was intentionally small. After the smoke test, the threshold was restored to `0.5`.
