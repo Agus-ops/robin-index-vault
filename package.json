@@ -20,7 +20,8 @@
     "test-pause-full": "node scripts/test-pause-full.js",
     "test-treasury-pause": "node scripts/test-treasury-pause.js",
     "test-recovery": "node scripts/test-recovery-guards.js",
-    "test-early-withdraw": "node scripts/test-early-withdraw-fee.js"
+    "test-early-withdraw": "node scripts/test-early-withdraw-fee.js",
+    "test-daily-cooldown": "node scripts/test-daily-rebalance-cooldown.js"
   },
   "keywords": [],
   "author": "",
