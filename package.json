@@ -19,7 +19,8 @@
     "test-dust": "node scripts/test-dust-split.js",
     "test-pause-full": "node scripts/test-pause-full.js",
     "test-treasury-pause": "node scripts/test-treasury-pause.js",
-    "test-recovery": "node scripts/test-recovery-guards.js"
+    "test-recovery": "node scripts/test-recovery-guards.js",
+    "test-early-withdraw": "node scripts/test-early-withdraw-fee.js"
   },
   "keywords": [],
   "author": "",
