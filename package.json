@@ -31,7 +31,9 @@
   "type": "module",
   "dependencies": {
     "dotenv": "^17.4.2",
-    "ethers": "^6.16.0",
-    "solc": "^0.8.35"
+    "ethers": "^6.16.0"
+  },
+  "devDependencies": {
+    "solc": "^0.8.34"
   }
 }

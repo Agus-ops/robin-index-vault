@@ -8,7 +8,7 @@
     "receiptToken": "0xeBA481658622F6b3893D57F58530AfA4F443bEdE",
     "treasury": "0x94d6BF3eb29D15642eE10ad5d1164749eB880961",
     "vault": "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7",
-    "rewardDistributor": "0x24BB0D5e6631a698a06819D8DD15Adbe4630727a"
+    "rewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f"
   },
   "tokens": {
     "TSLA": {
@@ -57,6 +57,17 @@
     "USDG": "100000000"
   },
   "transactions": {
-    "rewardDistributorDeploy": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68"
-  }
+    "rewardDistributorDeploy": "0x7b51e82dd412ade96a0dcc57dbd6a538b52e873e27f016255f9e44fd551132c5",
+    "previousRewardDistributorDeploy": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68",
+    "rewardDistributorSet": "0x331745ed707a7063f19056b46fa4caecb27cc5c5945105a23caf2d80fe41d7cb"
+  },
+  "previousRewardDistributor": "0x24BB0D5e6631a698a06819D8DD15Adbe4630727a",
+  "RewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f",
+  "rewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f",
+  "rewardDistributorDeployTx": "0x7b51e82dd412ade96a0dcc57dbd6a538b52e873e27f016255f9e44fd551132c5",
+  "rewardDistributorCompiler": "v0.8.34+commit.80d5c536",
+  "rewardDistributorRedeployedAt": "2026-06-12T20:48:58.868Z",
+  "rewardDistributorSetTx": "0x331745ed707a7063f19056b46fa4caecb27cc5c5945105a23caf2d80fe41d7cb",
+  "previousRewardDistributorDeployTx": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68",
+  "rewardDistributorVerified": true
 }

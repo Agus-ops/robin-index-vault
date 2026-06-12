@@ -54,3 +54,17 @@ FeeTreasury rewards bucket -> RewardDistributor -> funded weekly pool -> user al
 ## Note
 
 AMZN distribution threshold was temporarily lowered from `0.5` to `0.00001` for this testnet smoke test because the rewards bucket was intentionally small. After the smoke test, the threshold was restored to `0.5`.
+
+## RewardDistributor verification redeploy
+
+RewardDistributor was redeployed with Solidity compiler `v0.8.34+commit.80d5c536` because Robinhood Testnet Blockscout did not list the previous deployed compiler `v0.8.35+commit.47b9dedd`.
+
+New verified RewardDistributor:
+
+- Address: `0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f`
+- Previous address: `0x24BB0D5e6631a698a06819D8DD15Adbe4630727a`
+- Deploy tx: `0x7b51e82dd412ade96a0dcc57dbd6a538b52e873e27f016255f9e44fd551132c5`
+- FeeTreasury set tx: `0x331745ed707a7063f19056b46fa4caecb27cc5c5945105a23caf2d80fe41d7cb`
+- Compiler: `v0.8.34+commit.80d5c536`
+- Verification status: verified on Robinhood Testnet explorer
+- Keeper status: RewardDistributor is not a FeeTreasury keeper
