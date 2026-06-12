@@ -1,0 +1,25 @@
+{
+  "name": "robin-index-vault",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "node scripts/compile.js",
+    "deploy": "node scripts/deploy.js",
+    "check": "node scripts/check-assets.js",
+    "status": "node scripts/status.js",
+    "deposit": "node scripts/deposit.js",
+    "withdraw": "node scripts/withdraw.js",
+    "sweep": "node scripts/sweep.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "ethers": "^6.16.0",
+    "solc": "^0.8.35"
+  }
+}
