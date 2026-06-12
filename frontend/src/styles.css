@@ -687,3 +687,64 @@ h1 {
     grid-column: span 4;
   }
 }
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.miniBadge {
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.miniBadge.fresh {
+  color: #86efac;
+  background: rgba(0,255,163,.08);
+  border-color: rgba(0,255,163,.16);
+}
+
+.miniBadge.stale {
+  color: #fecaca;
+  background: rgba(255,59,48,.1);
+  border-color: rgba(255,59,48,.25);
+}
+
+.liveList {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.liveList div {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.055);
+}
+
+.liveList strong {
+  color: #fff;
+}
+
+.liveList span,
+.liveList small {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.liveList small {
+  font-family: "JetBrains Mono", "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.5;
+}

@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useChainId, useSwitchChain } from "wagmi";
+import { formatUnits } from "viem";
+import { useAccount, useChainId, usePublicClient, useSwitchChain } from "wagmi";
 import {
   CheckCircle2,
   Database,
   ExternalLink,
   Lock,
+  Loader2,
   Menu,
   ShieldCheck,
   Wallet,
@@ -13,7 +15,15 @@ import {
 } from "lucide-react";
 import { ADDRESSES, CHAIN_ID, EXPLORER, OPERATORS } from "./contracts/addresses";
 import { TOKENS } from "./contracts/tokens";
-import { shortAddress, explorerAddress, formatUsd } from "./lib/contracts";
+import { ABIS } from "./contracts/generated";
+import {
+  ERC20_ABI,
+  explorerAddress,
+  formatAmount,
+  formatUsd,
+  getFirstBigInt,
+  shortAddress,
+} from "./lib/contracts";
 import "./styles.css";
 
 const USER_VIEWS = [
@@ -29,9 +39,41 @@ const ADMIN_VIEWS = [
   ["oracle", "Oracle Manager"],
 ];
 
+function emptyData() {
+  return {
+    walletBalances: {},
+    vaultBalances: {},
+    receiptByToken: {},
+    prices: {},
+    fresh: {},
+    pendingFees: {},
+    totalDeposits: {},
+    buckets: {},
+    receiptBalance: 0n,
+    portfolioUsd: 0,
+    paused: false,
+  };
+}
+
+function toUsdFrom8(value) {
+  try {
+    return Number(formatUnits(value || 0n, 8));
+  } catch {
+    return 0;
+  }
+}
+
+function normalizeBuckets(value) {
+  if (!value) return [0n, 0n, 0n, 0n];
+  if (Array.isArray(value)) return [value[0] || 0n, value[1] || 0n, value[2] || 0n, value[3] || 0n];
+  const vals = Object.values(value).filter((x) => typeof x === "bigint");
+  return [vals[0] || 0n, vals[1] || 0n, vals[2] || 0n, vals[3] || 0n];
+}
+
 function App() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
+  const publicClient = usePublicClient();
   const { switchChain } = useSwitchChain();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -39,12 +81,145 @@ function App() {
   const [modal, setModal] = useState(null);
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [amount, setAmount] = useState("");
+  const [data, setData] = useState(emptyData());
+  const [loading, setLoading] = useState(false);
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   const isRightChain = chainId === CHAIN_ID;
 
   const isOperator = useMemo(() => {
     return address && OPERATORS.includes(address.toLowerCase());
   }, [address]);
+
+  async function readMaybe(contractAddress, abi, functionName, args = []) {
+    try {
+      return await publicClient.readContract({
+        address: contractAddress,
+        abi,
+        functionName,
+        args,
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  async function loadVaultData() {
+    if (!publicClient) return;
+
+    setLoading(true);
+
+    const next = emptyData();
+
+    try {
+      next.paused = Boolean(
+        await readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "paused", [])
+      );
+
+      if (address) {
+        const rBal = await readMaybe(ADDRESSES.receipt, ERC20_ABI, "balanceOf", [address]);
+        next.receiptBalance = rBal || 0n;
+
+        const pValue = await readMaybe(
+          ADDRESSES.vault,
+          ABIS.RobinIndexVault,
+          "getUserPortfolioValueUsd",
+          [address]
+        );
+        next.portfolioUsd = toUsdFrom8(pValue || 0n);
+      }
+
+      for (const token of TOKENS) {
+        const sym = token.symbol;
+
+        const priceRaw = await readMaybe(
+          ADDRESSES.oracle,
+          ABIS.MockStockOracle,
+          "getPrice",
+          [token.address]
+        );
+        const priceBig = getFirstBigInt(priceRaw);
+        next.prices[sym] = priceBig > 0n ? toUsdFrom8(priceBig) : token.fallbackPrice;
+
+        const freshRaw = await readMaybe(
+          ADDRESSES.oracle,
+          ABIS.MockStockOracle,
+          "isFresh",
+          [token.address]
+        );
+        next.fresh[sym] = freshRaw === null ? null : Boolean(freshRaw);
+
+        const pending = await readMaybe(
+          ADDRESSES.vault,
+          ABIS.RobinIndexVault,
+          "pendingFees",
+          [token.address]
+        );
+        next.pendingFees[sym] = pending || 0n;
+
+        const total = await readMaybe(
+          ADDRESSES.vault,
+          ABIS.RobinIndexVault,
+          "totalTokenDeposits",
+          [token.address]
+        );
+        next.totalDeposits[sym] = total || 0n;
+
+        const buckets = await readMaybe(
+          ADDRESSES.treasury,
+          ABIS.FeeTreasury,
+          "getBuckets",
+          [token.address]
+        );
+        next.buckets[sym] = normalizeBuckets(buckets);
+
+        if (address) {
+          const walletBal = await readMaybe(token.address, ERC20_ABI, "balanceOf", [address]);
+          next.walletBalances[sym] = walletBal || 0n;
+
+          const vaultBal = await readMaybe(
+            ADDRESSES.vault,
+            ABIS.RobinIndexVault,
+            "userBalances",
+            [address, token.address]
+          );
+          next.vaultBalances[sym] = vaultBal || 0n;
+
+          const receiptByToken = await readMaybe(
+            ADDRESSES.vault,
+            ABIS.RobinIndexVault,
+            "getUserReceiptByToken",
+            [address, token.address]
+          );
+          next.receiptByToken[sym] = receiptByToken || 0n;
+        }
+      }
+
+      if (address && next.portfolioUsd === 0) {
+        let fallbackPortfolioUsd = 0;
+
+        for (const token of TOKENS) {
+          const rawBalance = next.vaultBalances[token.symbol] || 0n;
+          const tokenAmount = Number(formatUnits(rawBalance, token.decimals));
+          const tokenPrice = next.prices[token.symbol] || token.fallbackPrice || 0;
+
+          if (Number.isFinite(tokenAmount) && Number.isFinite(tokenPrice)) {
+            fallbackPortfolioUsd += tokenAmount * tokenPrice;
+          }
+        }
+
+        next.portfolioUsd = fallbackPortfolioUsd;
+      }
+
+      setData(next);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadVaultData();
+  }, [address, publicClient, refreshNonce]);
 
   function go(nextView) {
     setView(nextView);
@@ -63,7 +238,11 @@ function App() {
     setAmount("");
   }
 
-  const estimateUsd = Number(amount || 0) * selectedToken.fallbackPrice;
+  function refresh() {
+    setRefreshNonce((x) => x + 1);
+  }
+
+  const estimateUsd = Number(amount || 0) * (data.prices[selectedToken.symbol] || selectedToken.fallbackPrice);
 
   return (
     <div className="app">
@@ -109,11 +288,7 @@ function App() {
 
             <nav className="drawerNav">
               {USER_VIEWS.map(([key, label]) => (
-                <button
-                  key={key}
-                  className={view === key ? "active" : ""}
-                  onClick={() => go(key)}
-                >
+                <button key={key} className={view === key ? "active" : ""} onClick={() => go(key)}>
                   {label}
                 </button>
               ))}
@@ -122,11 +297,7 @@ function App() {
                 <>
                   <div className="drawerSep" />
                   {ADMIN_VIEWS.map(([key, label]) => (
-                    <button
-                      key={key}
-                      className={view === key ? "active" : ""}
-                      onClick={() => go(key)}
-                    >
+                    <button key={key} className={view === key ? "active" : ""} onClick={() => go(key)}>
                       {label}
                     </button>
                   ))}
@@ -149,7 +320,13 @@ function App() {
       <main>
         {view === "overview" && (
           <>
-            <Hero isRightChain={isRightChain} isConnected={isConnected} switchChain={switchChain} />
+            <Hero
+              isRightChain={isRightChain}
+              isConnected={isConnected}
+              switchChain={switchChain}
+              paused={data.paused}
+              loading={loading}
+            />
             <LandingOverview go={go} />
           </>
         )}
@@ -160,7 +337,14 @@ function App() {
               title="Vault Ledger"
               subtitle="Deposit and withdraw supported testnet stock tokens from your ledger-based vault position."
             />
-            <SummaryLedger openModal={openModal} isConnected={isConnected} isRightChain={isRightChain} />
+            <SummaryLedger
+              data={data}
+              loading={loading}
+              refresh={refresh}
+              openModal={openModal}
+              isConnected={isConnected}
+              isRightChain={isRightChain}
+            />
           </>
         )}
 
@@ -171,7 +355,7 @@ function App() {
               subtitle="Your non-transferable receipt token for ledger-based vault deposits."
             />
             <div className="singlePanel">
-              <PortfolioPanel />
+              <PortfolioPanel data={data} isConnected={isConnected} loading={loading} />
             </div>
           </>
         )}
@@ -183,7 +367,7 @@ function App() {
               subtitle="Protocol fees are split into transparent buckets. Rewards are fee-funded only."
             />
             <div className="singlePanel">
-              <TreasuryPanel />
+              <TreasuryPanel data={data} />
             </div>
           </>
         )}
@@ -202,20 +386,14 @@ function App() {
 
         {view === "admin" && (
           <>
-            <ViewHero
-              title="Operator Control Room"
-              subtitle="Admin-only tools stay hidden from normal users."
-            />
-            <AdminPanel isOperator={isOperator} />
+            <ViewHero title="Operator Control Room" subtitle="Admin-only tools stay hidden from normal users." />
+            <AdminPanel isOperator={isOperator} focus="admin" />
           </>
         )}
 
         {view === "oracle" && (
           <>
-            <ViewHero
-              title="Oracle Manager"
-              subtitle="Admin-only mock oracle controls for the testnet deployment."
-            />
+            <ViewHero title="Oracle Manager" subtitle="Admin-only mock oracle controls for the testnet deployment." />
             <AdminPanel isOperator={isOperator} focus="oracle" />
           </>
         )}
@@ -235,7 +413,7 @@ function App() {
   );
 }
 
-function Hero({ isRightChain, isConnected, switchChain }) {
+function Hero({ isRightChain, isConnected, switchChain, paused, loading }) {
   return (
     <section className="hero">
       <div>
@@ -256,8 +434,16 @@ function Hero({ isRightChain, isConnected, switchChain }) {
 
       <div className="heroCard">
         <span>Network status</span>
-        <strong>{isRightChain ? "Ready" : "Switch required"}</strong>
-        <p>{isRightChain ? "Connected to Robinhood Chain Testnet." : "Switch wallet network before transactions."}</p>
+        <strong>{paused ? "Paused" : isRightChain ? "Ready" : "Switch required"}</strong>
+        <p>
+          {loading
+            ? "Reading on-chain vault state..."
+            : paused
+              ? "Deposits are paused. Withdrawals may remain available."
+              : isRightChain
+                ? "Connected to Robinhood Chain Testnet."
+                : "Switch wallet network before transactions."}
+        </p>
 
         {!isRightChain && isConnected && (
           <button className="primaryBtn" onClick={() => switchChain?.({ chainId: CHAIN_ID })}>
@@ -285,49 +471,29 @@ function LandingOverview({ go }) {
       <article className="landingCard primaryLanding">
         <span className="cardKicker">Core action</span>
         <h2>Vault Ledger</h2>
-        <p>
-          Deposit supported testnet stock tokens and withdraw the original deposited token
-          from your ledger balance.
-        </p>
-        <button className="primaryBtn" onClick={() => go("ledger")}>
-          Open Vault Ledger
-        </button>
+        <p>Deposit supported testnet stock tokens and withdraw the original deposited token from your ledger balance.</p>
+        <button className="primaryBtn" onClick={() => go("ledger")}>Open Vault Ledger</button>
       </article>
 
       <article className="landingCard">
         <span className="cardKicker">Receipt token</span>
         <h2>Non-transferable rINDEX</h2>
-        <p>
-          rINDEX acts as a non-transferable receipt for your vault position.
-          It is not a tradable yield token.
-        </p>
-        <button className="secondaryBtn" onClick={() => go("rindex")}>
-          View rINDEX
-        </button>
+        <p>rINDEX acts as a non-transferable receipt for your vault position. It is not a tradable yield token.</p>
+        <button className="secondaryBtn" onClick={() => go("rindex")}>View rINDEX</button>
       </article>
 
       <article className="landingCard">
         <span className="cardKicker">Protocol fees</span>
         <h2>Treasury buckets</h2>
-        <p>
-          Fees are split into reserve, rewards, router liquidity, and operator buckets.
-          Rewards are fee-funded only.
-        </p>
-        <button className="secondaryBtn" onClick={() => go("treasury")}>
-          View Treasury
-        </button>
+        <p>Fees are split into reserve, rewards, router liquidity, and operator buckets. Rewards are fee-funded only.</p>
+        <button className="secondaryBtn" onClick={() => go("treasury")}>View Treasury</button>
       </article>
 
       <article className="landingCard">
         <span className="cardKicker">Public trust</span>
         <h2>Verified v0.2.0 deployment</h2>
-        <p>
-          All core contracts are verified, smoke tested, and passed runtime invariant checks:
-          65 passes, 0 warnings, 0 failures.
-        </p>
-        <button className="secondaryBtn" onClick={() => go("contracts")}>
-          View Contracts
-        </button>
+        <p>All core contracts are verified, smoke tested, and passed runtime invariant checks.</p>
+        <button className="secondaryBtn" onClick={() => go("contracts")}>View Contracts</button>
       </article>
 
       <article className="landingCard wideLanding">
@@ -342,7 +508,7 @@ function LandingOverview({ go }) {
   );
 }
 
-function SummaryLedger({ openModal, isConnected, isRightChain }) {
+function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRightChain }) {
   return (
     <section id="ledger" className="panel">
       <div className="sectionHead">
@@ -350,66 +516,103 @@ function SummaryLedger({ openModal, isConnected, isRightChain }) {
           <h2>Vault Ledger</h2>
           <p>Ledger-based positions per deposited asset.</p>
         </div>
-        <span className="softPill">Testnet MVP</span>
+        <button className="secondaryBtn" onClick={refresh}>
+          {loading ? <Loader2 className="spin" size={15} /> : "Refresh"}
+        </button>
       </div>
 
       <div className="assetList">
-        {TOKENS.map((token) => (
-          <article className="assetCard" key={token.symbol}>
-            <div className="assetMain">
-              <div className="tokenMark">{token.symbol.slice(0, 1)}</div>
-              <div>
-                <strong>{token.symbol}</strong>
-                <span>{token.name}</span>
-              </div>
-            </div>
+        {TOKENS.map((token) => {
+          const fresh = data.fresh[token.symbol];
+          const depositDisabled = !isConnected || !isRightChain || data.paused || fresh === false;
+          const withdrawDisabled = !isConnected || !isRightChain;
 
-            <div className="assetData">
-              <div>
-                <span>Oracle price</span>
-                <strong>{formatUsd(token.fallbackPrice)}</strong>
+          return (
+            <article className="assetCard" key={token.symbol}>
+              <div className="assetMain">
+                <div className="tokenMark">{token.symbol.slice(0, 1)}</div>
+                <div>
+                  <strong>{token.symbol}</strong>
+                  <span>{token.name}</span>
+                  <em className={fresh === false ? "miniBadge stale" : "miniBadge fresh"}>
+                    {fresh === false ? "Oracle stale" : fresh === true ? "Oracle fresh" : "Oracle check"}
+                  </em>
+                </div>
               </div>
-              <div>
-                <span>Wallet</span>
-                <strong>Connect wallet</strong>
-              </div>
-              <div>
-                <span>Vault ledger</span>
-                <strong>Read wiring next</strong>
-              </div>
-            </div>
 
-            <div className="assetActions">
-              <button disabled={!isConnected || !isRightChain} onClick={() => openModal("deposit", token)}>
-                Deposit
-              </button>
-              <button disabled={!isConnected || !isRightChain} onClick={() => openModal("withdraw", token)}>
-                Withdraw
-              </button>
-            </div>
-          </article>
-        ))}
+              <div className="assetData">
+                <div>
+                  <span>Oracle price</span>
+                  <strong>{formatUsd(data.prices[token.symbol] || token.fallbackPrice)}</strong>
+                </div>
+                <div>
+                  <span>Wallet</span>
+                  <strong>
+                    {isConnected
+                      ? `${formatAmount(data.walletBalances[token.symbol] || 0n, token.decimals)} ${token.symbol}`
+                      : "Connect wallet"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Vault ledger</span>
+                  <strong>
+                    {isConnected
+                      ? `${formatAmount(data.vaultBalances[token.symbol] || 0n, token.decimals)} ${token.symbol}`
+                      : "—"}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="assetActions">
+                <button disabled={depositDisabled} onClick={() => openModal("deposit", token)}>
+                  {data.paused ? "Paused" : fresh === false ? "Stale" : "Deposit"}
+                </button>
+                <button disabled={withdrawDisabled} onClick={() => openModal("withdraw", token)}>
+                  Withdraw
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function PortfolioPanel() {
+function PortfolioPanel({ data, isConnected, loading }) {
+  let displayPortfolioUsd = data.portfolioUsd || 0;
+
+  if (isConnected && displayPortfolioUsd === 0) {
+    for (const token of TOKENS) {
+      const rawBalance = data.vaultBalances[token.symbol] || 0n;
+      const tokenAmount = Number(formatUnits(rawBalance, token.decimals));
+      const tokenPrice = data.prices[token.symbol] || token.fallbackPrice || 0;
+
+      if (Number.isFinite(tokenAmount) && Number.isFinite(tokenPrice)) {
+        displayPortfolioUsd += tokenAmount * tokenPrice;
+      }
+    }
+  }
+
   return (
     <section id="rindex" className="panel metricPanel">
       <div className="sectionHead">
         <div>
           <h2>Your Vault Portfolio</h2>
-          <p>Read-only preview until wallet data wiring is completed.</p>
+          <p>Based on vault ledger and mock oracle values.</p>
         </div>
         <Wallet size={20} />
       </div>
 
-      <div className="bigNumber">—</div>
+      <div className="bigNumber">
+        {loading ? "Reading..." : isConnected ? formatUsd(displayPortfolioUsd) : "—"}
+      </div>
 
       <div className="rindexBox">
         <span>rINDEX Balance</span>
-        <strong>Connect wallet</strong>
+        <strong>
+          {isConnected ? `${formatAmount(data.receiptBalance, 18)} rINDEX` : "Connect wallet"}
+        </strong>
         <em><Lock size={13} /> Non-transferable receipt</em>
       </div>
 
@@ -420,7 +623,7 @@ function PortfolioPanel() {
   );
 }
 
-function TreasuryPanel() {
+function TreasuryPanel({ data }) {
   return (
     <section id="treasury" className="panel">
       <div className="sectionHead">
@@ -435,8 +638,28 @@ function TreasuryPanel() {
       <Bucket label="Router Liquidity" pct={15} />
       <Bucket label="Admin Ops" pct={5} />
 
+      <div className="liveList">
+        {TOKENS.map((token) => {
+          const buckets = data.buckets[token.symbol] || [0n, 0n, 0n, 0n];
+
+          return (
+            <div key={token.symbol}>
+              <strong>{token.symbol}</strong>
+              <span>Pending {formatAmount(data.pendingFees[token.symbol] || 0n, token.decimals, 6)}</span>
+              <span>Total deposits {formatAmount(data.totalDeposits[token.symbol] || 0n, token.decimals, 4)}</span>
+              <small>
+                R {formatAmount(buckets[0], token.decimals, 6)} ·
+                W {formatAmount(buckets[1], token.decimals, 6)} ·
+                L {formatAmount(buckets[2], token.decimals, 6)} ·
+                O {formatAmount(buckets[3], token.decimals, 6)}
+              </small>
+            </div>
+          );
+        })}
+      </div>
+
       <p className="fineprint">
-        Fee buckets reflect protocol design: 50 / 30 / 15 / 5.
+        Bucket order: Reserve · Rewards · Router · Operator.
       </p>
     </section>
   );
@@ -498,12 +721,12 @@ function AdminPanel({ isOperator, focus }) {
         <div>
           <strong>Oracle Manager</strong>
           <p>Update token prices from verified oracle contract.</p>
-          <button disabled>Wiring next</button>
+          <button disabled>Write wiring next</button>
         </div>
         <div>
           <strong>Treasury Sweep</strong>
           <p>Sweep pending protocol fees into treasury buckets.</p>
-          <button disabled>Wiring next</button>
+          <button disabled>Write wiring next</button>
         </div>
         <div>
           <strong>Emergency</strong>
@@ -529,19 +752,14 @@ function ActionModal({ modal, selectedToken, amount, setAmount, estimateUsd, clo
 
         <label className="amountLabel">
           Amount
-          <input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            inputMode="decimal"
-          />
+          <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" inputMode="decimal" />
         </label>
 
         <div className="breakdown">
           <div><span>Selected asset</span><strong>{selectedToken.symbol}</strong></div>
           <div><span>Estimated USD value</span><strong>{formatUsd(estimateUsd)}</strong></div>
-          <div><span>Protocol fee</span><strong>Contract-enforced</strong></div>
-          <div><span>{modal === "deposit" ? "Expected receipt" : "Expected burn"}</span><strong>Calculated by vault</strong></div>
+          <div><span>Protocol fee</span><strong>Contract preview next</strong></div>
+          <div><span>{modal === "deposit" ? "Expected receipt" : "Expected burn"}</span><strong>Contract preview next</strong></div>
         </div>
 
         <button className="primaryBtn wide" disabled>
