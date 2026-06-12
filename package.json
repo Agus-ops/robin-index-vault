@@ -16,7 +16,8 @@
     "refresh-prices": "node scripts/refresh-prices.js",
     "invariant": "node scripts/invariant-check.js",
     "test-stale": "node scripts/test-oracle-stale-withdraw.js",
-    "test-dust": "node scripts/test-dust-split.js"
+    "test-dust": "node scripts/test-dust-split.js",
+    "test-pause-full": "node scripts/test-pause-full.js"
   },
   "keywords": [],
   "author": "",
