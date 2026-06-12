@@ -74,3 +74,68 @@ rINDEX is non-transferable.
 ReceiptToken vaultLocked is true.
 pause blocks deposits but not withdrawals.
 Rewards are funded only by collected protocol fees.
+
+## Latest Protocol Status
+
+Robin Index Vault is live on Robinhood Chain Testnet as a stock-token vault MVP with non-transferable rINDEX, fee accounting, treasury buckets, and capped reward distribution.
+
+### Deployed Contracts
+
+Network: Robinhood Chain Testnet, chainId 46630.
+
+| Contract | Address |
+|---|---|
+| MockStockOracle | 0x09FcC88e4d70DE7e0feA45D422E01D2b6922E3Aa |
+| ReceiptToken / rINDEX | 0xeBA481658622F6b3893D57F58530AfA4F443bEdE |
+| FeeTreasury | 0x94d6BF3eb29D15642eE10ad5d1164749eB880961 |
+| RobinIndexVault | 0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7 |
+| RewardDistributor | 0x24BB0D5e6631a698a06819D8DD15Adbe4630727a |
+
+### Proven Features
+
+- Stock-token deposits mint non-transferable rINDEX.
+- Withdrawals return the original underlying token.
+- Withdrawals remain available while the vault is paused.
+- Fees are split into reserve, rewards, router, and operator buckets.
+- Multi-user accounting is isolated.
+- rINDEX totalSupply matches watched user receipts.
+- RewardDistributor distributes only already-funded rewards.
+- Rewards are capped by weekly allocation, 5% relative cap, and absolute per-token cap.
+- Double claims are blocked.
+
+### Test Summary
+
+- Runtime invariant: 65 passes / 0 warnings / 0 failures
+- Oracle stale withdraw test: passed
+- Treasury dust split test: passed
+- Full vault pause behavior test: passed
+- Treasury pause behavior test: passed
+- Recovery guard test: passed
+- Early withdraw fee test: passed
+- Daily rebalance cooldown test: passed
+- Multi-user ledger test: passed
+- Reward flow smoke test: passed
+
+### Reward Flow
+
+FeeTreasury rewards bucket -> RewardDistributor -> weekly pool -> allocation -> capped user claim.
+
+Smoke test report:
+
+- reports/reward-flow-smoke.md
+
+### RewardDistributor Safety
+
+- RewardDistributor is not a FeeTreasury keeper.
+- RewardDistributor does not call FeeTreasury.withdrawBucket.
+- FeeTreasury owner/keeper manually sends rewards bucket funds to RewardDistributor.
+- RewardDistributor only registers already-received unallocated balances through fundWeek.
+- AMZN distribution threshold was temporarily lowered for smoke testing, then restored to 0.5.
+
+### Useful Commands
+
+- npm run compile
+- npm run status
+- npm run invariant
+- npm run test-multi-user
+
