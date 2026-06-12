@@ -13,7 +13,8 @@
     "withdraw": "node scripts/withdraw.js",
     "sweep": "node scripts/sweep.js",
     "price": "node scripts/set-price.js",
-    "refresh-prices": "node scripts/refresh-prices.js"
+    "refresh-prices": "node scripts/refresh-prices.js",
+    "invariant": "node scripts/invariant-check.js"
   },
   "keywords": [],
   "author": "",
