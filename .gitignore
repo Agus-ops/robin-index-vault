@@ -4,3 +4,5 @@ artifacts/
 cache/
 *.log
 .DS_Store
+second-wallet-local-only.txt
+.env.backup.*
