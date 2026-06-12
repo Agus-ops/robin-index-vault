@@ -7,7 +7,8 @@
     "oracle": "0x09FcC88e4d70DE7e0feA45D422E01D2b6922E3Aa",
     "receiptToken": "0xeBA481658622F6b3893D57F58530AfA4F443bEdE",
     "treasury": "0x94d6BF3eb29D15642eE10ad5d1164749eB880961",
-    "vault": "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7"
+    "vault": "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7",
+    "rewardDistributor": "0x24BB0D5e6631a698a06819D8DD15Adbe4630727a"
   },
   "tokens": {
     "TSLA": {
@@ -54,5 +55,8 @@
     "PLTR": "7500000000",
     "AMD": "16000000000",
     "USDG": "100000000"
+  },
+  "transactions": {
+    "rewardDistributorDeploy": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68"
   }
 }
