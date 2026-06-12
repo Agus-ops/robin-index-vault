@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Robin Index Vault v0.2.0</title>
+  <style>
+    :root {
+      --bg: #080b12;
+      --card: #111827;
+      --card2: #0f172a;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #1f2937;
+      --green: #22c55e;
+      --blue: #60a5fa;
+      --yellow: #facc15;
+      --red: #fb7185;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 34rem),
+        radial-gradient(circle at top right, rgba(96, 165, 250, 0.12), transparent 34rem),
+        var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 32px 18px 56px;
+    }
+
+    .hero {
+      padding: 34px 22px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.88));
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    h1 {
+      margin: 10px 0 8px;
+      font-size: clamp(34px, 7vw, 64px);
+      line-height: 1.02;
+    }
+
+    .lead {
+      color: var(--muted);
+      max-width: 760px;
+      font-size: 18px;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.035);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .ok {
+      color: var(--green);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .card {
+      grid-column: span 12;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(17, 24, 39, 0.88);
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    @media (min-width: 760px) {
+      .half {
+        grid-column: span 6;
+      }
+
+      .third {
+        grid-column: span 4;
+      }
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .item {
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .item:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    code {
+      color: #dbeafe;
+      background: rgba(96, 165, 250, 0.08);
+      padding: 2px 6px;
+      border-radius: 8px;
+      word-break: break-all;
+    }
+
+    .addr {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .stat {
+      font-size: 30px;
+      font-weight: 900;
+      margin: 4px 0;
+    }
+
+    .footer {
+      color: var(--muted);
+      text-align: center;
+      margin-top: 28px;
+      font-size: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      display: inline-block;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+    }
+
+    .btn.primary {
+      border-color: rgba(34, 197, 94, 0.5);
+      background: rgba(34, 197, 94, 0.14);
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Robinhood Chain Testnet · Chain ID 46630</div>
+      <h1>Robin Index Vault v0.2.0</h1>
+      <p class="lead">
+        A ledger-based stock-token vault MVP with non-transferable rINDEX receipts,
+        treasury fee buckets, and a capped reward distributor. This is the full verified
+        public-trust deployment.
+      </p>
+
+      <div class="badges">
+        <span class="badge ok">✓ All core contracts verified</span>
+        <span class="badge ok">✓ Smoke tested</span>
+        <span class="badge ok">✓ Invariant: 65 / 0 / 0</span>
+        <span class="badge">Solidity v0.8.34</span>
+      </div>
+
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/Agus-ops/robin-index-vault" target="_blank" rel="noreferrer">View GitHub</a>
+        <a class="btn" href="https://github.com/Agus-ops/robin-index-vault/releases/tag/v0.2.0" target="_blank" rel="noreferrer">View Release</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card third">
+        <h2>Verification</h2>
+        <div class="stat ok">5 / 5</div>
+        <div class="muted">All core contracts verified on the Robinhood Testnet explorer.</div>
+      </div>
+
+      <div class="card third">
+        <h2>Invariant</h2>
+        <div class="stat ok">65 / 0 / 0</div>
+        <div class="muted">65 passes, 0 warnings, 0 failures after smoke test.</div>
+      </div>
+
+      <div class="card third">
+        <h2>Release</h2>
+        <div class="stat">v0.2.0</div>
+        <div class="muted">Public-trust verified deployment.</div>
+      </div>
+
+      <div class="card">
+        <h2>Verified Contracts</h2>
+
+        <div class="item">
+          <h3>MockStockOracle</h3>
+          <a class="addr" href="https://explorer.testnet.chain.robinhood.com/address/0xFB22dF75fFD1E89b23f9b9727880a22C039350a9" target="_blank" rel="noreferrer">
+            0xFB22dF75fFD1E89b23f9b9727880a22C039350a9
+          </a>
+        </div>
+
+        <div class="item">
+          <h3>ReceiptToken / rINDEX</h3>
+          <a class="addr" href="https://explorer.testnet.chain.robinhood.com/address/0x032F80b841c1677ae188d34004a8F6e5F4f576B4" target="_blank" rel="noreferrer">
+            0x032F80b841c1677ae188d34004a8F6e5F4f576B4
+          </a>
+        </div>
+
+        <div class="item">
+          <h3>FeeTreasury</h3>
+          <a class="addr" href="https://explorer.testnet.chain.robinhood.com/address/0xf5579396bFaEd22a14fF43d09eD490ae78784211" target="_blank" rel="noreferrer">
+            0xf5579396bFaEd22a14fF43d09eD490ae78784211
+          </a>
+        </div>
+
+        <div class="item">
+          <h3>RobinIndexVault</h3>
+          <a class="addr" href="https://explorer.testnet.chain.robinhood.com/address/0x1f51A1c104115fD24D3389428BC7Dbe370d3466b" target="_blank" rel="noreferrer">
+            0x1f51A1c104115fD24D3389428BC7Dbe370d3466b
+          </a>
+        </div>
+
+        <div class="item">
+          <h3>RewardDistributor</h3>
+          <a class="addr" href="https://explorer.testnet.chain.robinhood.com/address/0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15" target="_blank" rel="noreferrer">
+            0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15
+          </a>
+        </div>
+      </div>
+
+      <div class="card half">
+        <h2>Smoke Test</h2>
+        <div class="item">
+          <h3>Approve TSLA</h3>
+          <code>0x854ceb9e7f252312acfd9164c6c2e8dce2fb09e31371ff4172d6c3372611124e</code>
+        </div>
+        <div class="item">
+          <h3>Deposit 0.1 TSLA</h3>
+          <code>0x36495ec2a5ffe10f7b8efe3cae2dfab9a60ddee9c1939bba2868a3f70f5d646c</code>
+        </div>
+        <div class="item">
+          <h3>Withdraw 0.02 TSLA</h3>
+          <code>0xb87c3e4cf284253d78e292bf9a825d7c17bc6c68476f79880329ec7a57dde372</code>
+        </div>
+        <div class="item">
+          <h3>Sweep TSLA fees</h3>
+          <code>0xf5ef4c7310a41aa62a049e45d58596b4908747446d763d30ba174fdd63823218</code>
+        </div>
+      </div>
+
+      <div class="card half">
+        <h2>Post-Smoke State</h2>
+        <div class="item">
+          <h3>User TSLA vault balance</h3>
+          <div class="muted">0.0797 TSLA</div>
+        </div>
+        <div class="item">
+          <h3>User rINDEX balance</h3>
+          <div class="muted">14.346 rINDEX</div>
+        </div>
+        <div class="item">
+          <h3>Treasury TSLA buckets</h3>
+          <div class="muted">
+            Reserve 0.00025 · Rewards 0.00015 · Router 0.000075 · Operator 0.000025
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Design Notes</h2>
+        <p class="muted">
+          rINDEX is non-transferable. Withdrawals return the original deposited token and do not depend on oracle price or NAV.
+          Rewards are funded only by collected protocol fees. RewardDistributor does not mint rewards and is not a FeeTreasury keeper.
+        </p>
+      </div>
+    </section>
+
+    <div class="footer">
+      Built by Agus-ops · Robin Index Vault v0.2.0
+    </div>
+  </main>
+</body>
+</html>
