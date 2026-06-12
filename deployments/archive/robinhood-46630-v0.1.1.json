@@ -1,0 +1,73 @@
+{
+  "chainId": 46630,
+  "deployer": "0xD2F9f6381Fb5f00c2fC606553592dB28309c019d",
+  "owner": "0xD2F9f6381Fb5f00c2fC606553592dB28309c019d",
+  "deployedAt": "2026-06-12T15:56:55.404Z",
+  "contracts": {
+    "oracle": "0x09FcC88e4d70DE7e0feA45D422E01D2b6922E3Aa",
+    "receiptToken": "0xeBA481658622F6b3893D57F58530AfA4F443bEdE",
+    "treasury": "0x94d6BF3eb29D15642eE10ad5d1164749eB880961",
+    "vault": "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7",
+    "rewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f"
+  },
+  "tokens": {
+    "TSLA": {
+      "address": "0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "AMZN": {
+      "address": "0x5884aD2f920c162CFBbACc88C9C51AA75eC09E02",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "NFLX": {
+      "address": "0x3b8262A63d25f0477c4DDE23F83cfe22Cb768C93",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "PLTR": {
+      "address": "0x1FBE1a0e43594b3455993B5dE5Fd0A7A266298d0",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "AMD": {
+      "address": "0x71178BAc73cBeb415514eB542a8995b82669778d",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "USDG": {
+      "address": "0x7E955252E15c84f5768B83c41a71F9eba181802F",
+      "decimals": 6,
+      "isStock": false,
+      "isSettlement": true
+    }
+  },
+  "initialPrices8": {
+    "TSLA": "18000000000",
+    "AMZN": "18500000000",
+    "NFLX": "65000000000",
+    "PLTR": "7500000000",
+    "AMD": "16000000000",
+    "USDG": "100000000"
+  },
+  "transactions": {
+    "rewardDistributorDeploy": "0x7b51e82dd412ade96a0dcc57dbd6a538b52e873e27f016255f9e44fd551132c5",
+    "previousRewardDistributorDeploy": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68",
+    "rewardDistributorSet": "0x331745ed707a7063f19056b46fa4caecb27cc5c5945105a23caf2d80fe41d7cb"
+  },
+  "previousRewardDistributor": "0x24BB0D5e6631a698a06819D8DD15Adbe4630727a",
+  "RewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f",
+  "rewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f",
+  "rewardDistributorDeployTx": "0x7b51e82dd412ade96a0dcc57dbd6a538b52e873e27f016255f9e44fd551132c5",
+  "rewardDistributorCompiler": "v0.8.34+commit.80d5c536",
+  "rewardDistributorRedeployedAt": "2026-06-12T20:48:58.868Z",
+  "rewardDistributorSetTx": "0x331745ed707a7063f19056b46fa4caecb27cc5c5945105a23caf2d80fe41d7cb",
+  "previousRewardDistributorDeployTx": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68",
+  "rewardDistributorVerified": true
+}

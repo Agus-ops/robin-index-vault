@@ -1,14 +1,16 @@
 {
+  "version": "v0.2.0",
   "chainId": 46630,
   "deployer": "0xD2F9f6381Fb5f00c2fC606553592dB28309c019d",
   "owner": "0xD2F9f6381Fb5f00c2fC606553592dB28309c019d",
-  "deployedAt": "2026-06-12T15:56:55.404Z",
+  "deployedAt": "2026-06-12T21:08:05.605Z",
+  "compiler": "v0.8.34+commit.80d5c536",
   "contracts": {
-    "oracle": "0x09FcC88e4d70DE7e0feA45D422E01D2b6922E3Aa",
-    "receiptToken": "0xeBA481658622F6b3893D57F58530AfA4F443bEdE",
-    "treasury": "0x94d6BF3eb29D15642eE10ad5d1164749eB880961",
-    "vault": "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7",
-    "rewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f"
+    "oracle": "0xFB22dF75fFD1E89b23f9b9727880a22C039350a9",
+    "receiptToken": "0x032F80b841c1677ae188d34004a8F6e5F4f576B4",
+    "treasury": "0xf5579396bFaEd22a14fF43d09eD490ae78784211",
+    "vault": "0x1f51A1c104115fD24D3389428BC7Dbe370d3466b",
+    "rewardDistributor": "0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15"
   },
   "tokens": {
     "TSLA": {
@@ -57,17 +59,10 @@
     "USDG": "100000000"
   },
   "transactions": {
-    "rewardDistributorDeploy": "0x7b51e82dd412ade96a0dcc57dbd6a538b52e873e27f016255f9e44fd551132c5",
-    "previousRewardDistributorDeploy": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68",
-    "rewardDistributorSet": "0x331745ed707a7063f19056b46fa4caecb27cc5c5945105a23caf2d80fe41d7cb"
-  },
-  "previousRewardDistributor": "0x24BB0D5e6631a698a06819D8DD15Adbe4630727a",
-  "RewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f",
-  "rewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f",
-  "rewardDistributorDeployTx": "0x7b51e82dd412ade96a0dcc57dbd6a538b52e873e27f016255f9e44fd551132c5",
-  "rewardDistributorCompiler": "v0.8.34+commit.80d5c536",
-  "rewardDistributorRedeployedAt": "2026-06-12T20:48:58.868Z",
-  "rewardDistributorSetTx": "0x331745ed707a7063f19056b46fa4caecb27cc5c5945105a23caf2d80fe41d7cb",
-  "previousRewardDistributorDeployTx": "0xc445cc82f2dfeeda101fbb05d1bbe4deb0b3480a6a720ccf91abbf2abce3ac68",
-  "rewardDistributorVerified": true
+    "MockStockOracleDeploy": "0x3d4e7f3c206b9d273c7eaa3e7fb0b193add502a0f485a17ce8dd1df8eba6677b",
+    "ReceiptTokenDeploy": "0x097c63a015a83c809e6e92c938340a27375e7f2adb698ac1e0aad5c0feec4057",
+    "FeeTreasuryDeploy": "0x93a61f0b2a53fcf92aa3ba81a48c7c0d62daf4edda303236a30efa89dc3f82c4",
+    "RobinIndexVaultDeploy": "0x4aebbd3fabc51d61ed429af2469201924b9c79a33eb10ad0c54bcd40b39c8bce",
+    "RewardDistributorDeploy": "0x5b25c5683201488af181320c44d025a77a8a273bf9b31238b6fb9ad7255d4d75"
+  }
 }

@@ -139,3 +139,31 @@ Smoke test report:
 - npm run invariant
 - npm run test-multi-user
 
+
+
+## v0.2.0 Public-Trust Verified Deployment
+
+Robin Index Vault v0.2.0 is the full verified public-trust deployment on Robinhood Chain Testnet. All core contracts are verified on the explorer using Solidity compiler v0.8.34+commit.80d5c536.
+
+Contracts:
+
+- MockStockOracle: 0xFB22dF75fFD1E89b23f9b9727880a22C039350a9
+- ReceiptToken / rINDEX: 0x032F80b841c1677ae188d34004a8F6e5F4f576B4
+- FeeTreasury: 0xf5579396bFaEd22a14fF43d09eD490ae78784211
+- RobinIndexVault: 0x1f51A1c104115fD24D3389428BC7Dbe370d3466b
+- RewardDistributor: 0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15
+
+Status:
+
+- All core contracts verified on Robinhood Testnet explorer.
+- Smoke test passed: approve, deposit, withdraw, and sweep fees.
+- Runtime invariant check passed after smoke: 65 passes, 0 warnings, 0 failures.
+- ReceiptToken vault binding locked.
+- FeeTreasury configured with the v0.2 vault as fee source.
+- FeeTreasury configured with the v0.2 RewardDistributor.
+- RewardDistributor is not a FeeTreasury keeper.
+
+Legacy note:
+
+v0.1.1 remains the previous proven MVP deployment. v0.2.0 is the public-trust deployment created so all core contracts are explorer-verified.
+
