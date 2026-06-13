@@ -398,6 +398,19 @@ function App() {
     loadVaultData();
   }, [address, publicClient, refreshNonce]);
 
+  useEffect(() => {
+    if (!publicClient) return;
+
+    const id = window.setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      if (modal || sweepingSymbol) return;
+
+      loadVaultData();
+    }, 60000);
+
+    return () => window.clearInterval(id);
+  }, [address, publicClient, modal, sweepingSymbol]);
+
   function refreshVaultData() {
     showToast("info", "Refreshing vault state from contract...");
     setRefreshNonce((x) => x + 1);
@@ -584,7 +597,7 @@ function App() {
 
         {view === "oracle" && (
           <>
-            <ViewHero title="Oracle Manager" subtitle="Read-only mock oracle status for testnet vault accounting." />
+            <ViewHero title="Oracle Manager" subtitle="Keeper-managed mock oracle status for testnet vault accounting." />
             <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="oracle" onSweepFees={runSweepFees} sweepingSymbol={sweepingSymbol} />
           </>
         )}
@@ -1054,7 +1067,7 @@ function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sw
         <div className="sectionHead">
           <div>
             <h2>Oracle Manager</h2>
-            <p>Read-only mock oracle status. Write controls remain disabled for the next wiring pass.</p>
+            <p>Keeper-managed mock oracle status. Manual override stays disabled unless needed for admin review.</p>
           </div>
           <span className="dangerPill">Admin</span>
         </div>
@@ -1062,8 +1075,8 @@ function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sw
         <div className="adminSummaryGrid">
           <div>
             <span>Oracle mode</span>
-            <strong>Mock pricing</strong>
-            <em>Testnet accounting only</em>
+            <strong>Keeper managed</strong>
+            <em>Finnhub API via operator keeper</em>
           </div>
           <div>
             <span>Read status</span>
@@ -1115,7 +1128,7 @@ function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sw
         </div>
 
         <p className="fineprint">
-          Oracle values are mock testnet prices used for vault accounting. They are not live market data.
+          Oracle values are mock testnet stock references updated periodically by the operator keeper. They are not real-time market data.
         </p>
       </section>
     );
@@ -1126,7 +1139,7 @@ function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sw
       <div className="sectionHead">
         <div>
           <h2>Operator Control Room</h2>
-          <p>Read-only vault operations view. Write controls remain disabled for safety.</p>
+          <p>Keeper monitors pending fees automatically. Manual sweep remains available as operator fallback.</p>
         </div>
         <span className="dangerPill">Admin</span>
       </div>
