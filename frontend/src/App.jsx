@@ -100,12 +100,79 @@ function App() {
   const [writeBusy, setWriteBusy] = useState(false);
   const [toast, setToast] = useState(null);
   const [refreshNonce, setRefreshNonce] = useState(0);
+  const [preview, setPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const isRightChain = chainId === CHAIN_ID;
 
   const isOperator = useMemo(() => {
     return address && OPERATORS.includes(address.toLowerCase());
   }, [address]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadActionPreview() {
+      setPreview(null);
+
+      if (!modal || !selectedToken || !publicClient || !address || !isConnected || !isRightChain || !amount) {
+        setPreviewLoading(false);
+        return;
+      }
+
+      let parsedAmount;
+
+      try {
+        parsedAmount = parseUnits(normalizeAmountInput(amount), selectedToken.decimals);
+        if (parsedAmount <= 0n) {
+          setPreviewLoading(false);
+          return;
+        }
+      } catch {
+        setPreviewLoading(false);
+        return;
+      }
+
+      setPreviewLoading(true);
+
+      try {
+        const result = await publicClient.readContract({
+          address: ADDRESSES.vault,
+          abi: ABIS.RobinIndexVault,
+          functionName: modal === "deposit" ? "previewDeposit" : "previewWithdraw",
+          args: modal === "deposit"
+            ? [selectedToken.address, parsedAmount]
+            : [address, selectedToken.address, parsedAmount],
+        });
+
+        if (!cancelled) {
+          setPreview({
+            type: modal,
+            token: selectedToken.symbol,
+            amount: parsedAmount,
+            result,
+          });
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setPreview({
+            type: modal,
+            token: selectedToken.symbol,
+            amount: parsedAmount,
+            error: err?.shortMessage || err?.message || "Preview unavailable",
+          });
+        }
+      } finally {
+        if (!cancelled) setPreviewLoading(false);
+      }
+    }
+
+    loadActionPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [modal, selectedToken, amount, publicClient, address, isConnected, isRightChain]);
 
   async function readMaybe(contractAddress, abi, functionName, args = []) {
     try {
@@ -128,8 +195,14 @@ function App() {
 
   async function waitForTx(hash) {
     if (!publicClient || !hash) return;
+
     await publicClient.waitForTransactionReceipt({ hash });
+
+    // Refresh immediately, then retry after short delays because RPC/indexed reads
+    // can lag a few seconds after a confirmed transaction.
     setRefreshNonce((x) => x + 1);
+    window.setTimeout(() => setRefreshNonce((x) => x + 1), 1500);
+    window.setTimeout(() => setRefreshNonce((x) => x + 1), 4000);
   }
 
   async function runDeposit() {
@@ -218,86 +291,81 @@ function App() {
     const next = emptyData();
 
     try {
-      next.paused = Boolean(
-        await readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "paused", [])
+      const [pausedRaw, receiptBalanceRaw, portfolioRaw] = await Promise.all([
+        readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "paused", []),
+        address ? readMaybe(ADDRESSES.receipt, ERC20_ABI, "balanceOf", [address]) : Promise.resolve(null),
+        address
+          ? readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "getUserPortfolioValueUsd", [address])
+          : Promise.resolve(null),
+      ]);
+
+      next.paused = Boolean(pausedRaw);
+      next.receiptBalance = receiptBalanceRaw || 0n;
+
+      const portfolioBig = getFirstBigInt(portfolioRaw);
+      next.portfolioUsd = portfolioBig > 0n ? toUsdFrom8(portfolioBig) : 0;
+
+      const tokenResults = await Promise.all(
+        TOKENS.map(async (token) => {
+          const sym = token.symbol;
+
+          const reads = [
+            readMaybe(ADDRESSES.oracle, ABIS.MockStockOracle, "getPrice", [token.address]),
+            readMaybe(ADDRESSES.oracle, ABIS.MockStockOracle, "isFresh", [token.address]),
+            readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "pendingFees", [token.address]),
+            readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "totalTokenDeposits", [token.address]),
+            readMaybe(ADDRESSES.treasury, ABIS.FeeTreasury, "getBuckets", [token.address]),
+          ];
+
+          if (address) {
+            reads.push(
+              readMaybe(token.address, ERC20_ABI, "balanceOf", [address]),
+              readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "userBalances", [address, token.address]),
+              readMaybe(ADDRESSES.vault, ABIS.RobinIndexVault, "getUserReceiptByToken", [address, token.address])
+            );
+          }
+
+          const [
+            priceRaw,
+            freshRaw,
+            pending,
+            total,
+            buckets,
+            walletBal,
+            vaultBal,
+            receiptByToken,
+          ] = await Promise.all(reads);
+
+          return {
+            token,
+            sym,
+            priceRaw,
+            freshRaw,
+            pending,
+            total,
+            buckets,
+            walletBal,
+            vaultBal,
+            receiptByToken,
+          };
+        })
       );
 
-      if (address) {
-        const rBal = await readMaybe(ADDRESSES.receipt, ERC20_ABI, "balanceOf", [address]);
-        next.receiptBalance = rBal || 0n;
+      for (const item of tokenResults) {
+        const { token, sym } = item;
 
-        const pValue = await readMaybe(
-          ADDRESSES.vault,
-          ABIS.RobinIndexVault,
-          "getUserPortfolioValueUsd",
-          [address]
-        );
-        next.portfolioUsd = toUsdFrom8(pValue || 0n);
-      }
-
-      for (const token of TOKENS) {
-        const sym = token.symbol;
-
-        const priceRaw = await readMaybe(
-          ADDRESSES.oracle,
-          ABIS.MockStockOracle,
-          "getPrice",
-          [token.address]
-        );
-        const priceBig = getFirstBigInt(priceRaw);
+        const priceBig = getFirstBigInt(item.priceRaw);
         next.prices[sym] = priceBig > 0n ? toUsdFrom8(priceBig) : token.fallbackPrice;
 
-        const freshRaw = await readMaybe(
-          ADDRESSES.oracle,
-          ABIS.MockStockOracle,
-          "isFresh",
-          [token.address]
-        );
-        next.fresh[sym] = freshRaw === null ? null : Boolean(freshRaw);
-
-        const pending = await readMaybe(
-          ADDRESSES.vault,
-          ABIS.RobinIndexVault,
-          "pendingFees",
-          [token.address]
-        );
-        next.pendingFees[sym] = pending || 0n;
-
-        const total = await readMaybe(
-          ADDRESSES.vault,
-          ABIS.RobinIndexVault,
-          "totalTokenDeposits",
-          [token.address]
-        );
-        next.totalDeposits[sym] = total || 0n;
-
-        const buckets = await readMaybe(
-          ADDRESSES.treasury,
-          ABIS.FeeTreasury,
-          "getBuckets",
-          [token.address]
-        );
-        next.buckets[sym] = normalizeBuckets(buckets);
+        next.fresh[sym] = item.freshRaw === null ? null : Boolean(item.freshRaw);
+        next.pendingFees[sym] = item.pending || 0n;
+        next.totalDeposits[sym] = item.total || 0n;
+        next.buckets[sym] = normalizeBuckets(item.buckets);
 
         if (address) {
-          const walletBal = await readMaybe(token.address, ERC20_ABI, "balanceOf", [address]);
-          next.walletBalances[sym] = walletBal || 0n;
-
-          const vaultBal = await readMaybe(
-            ADDRESSES.vault,
-            ABIS.RobinIndexVault,
-            "userBalances",
-            [address, token.address]
-          );
-          next.vaultBalances[sym] = vaultBal || 0n;
-
-          const receiptByToken = await readMaybe(
-            ADDRESSES.vault,
-            ABIS.RobinIndexVault,
-            "getUserReceiptByToken",
-            [address, token.address]
-          );
-          next.receiptByToken[sym] = receiptByToken || 0n;
+          next.walletBalances[sym] = item.walletBal || 0n;
+          next.vaultBalances[sym] = item.vaultBal || 0n;
+          next.receiptByToken[sym] = item.receiptByToken || 0n;
         }
       }
 
@@ -506,6 +574,8 @@ function App() {
           amount={amount}
           setAmount={setAmount}
           estimateUsd={estimateUsd}
+          preview={preview}
+          previewLoading={previewLoading}
           closeModal={closeModal}
           onConfirm={modal === "deposit" ? runDeposit : runWithdraw}
           writeBusy={writeBusy}
@@ -952,6 +1022,8 @@ function ActionModal({
   amount,
   setAmount,
   estimateUsd,
+  preview,
+  previewLoading,
   closeModal,
   onConfirm,
   writeBusy,
@@ -962,29 +1034,60 @@ function ActionModal({
   const inputAmount = Number(normalizedAmount);
   const safeAmount = Number.isFinite(inputAmount) && inputAmount > 0 ? inputAmount : 0;
 
-  // UI estimate only. Contract remains source of truth.
-  // Deposit fee: 50 bps / 0.5%
-  // Withdraw normal fee: 20 bps / 0.2%
-  // Early withdraw may be higher in contract preview.
+  const previewValues = Array.isArray(preview?.result)
+    ? preview.result
+    : preview?.result
+      ? Object.values(preview.result).filter((x) => typeof x === "bigint" || typeof x === "boolean")
+      : [];
+
+  const hasPreview = Boolean(preview && !preview.error && previewValues.length > 0);
+
+  // Fallback UI estimate only. Contract preview is preferred whenever available.
   const depositFeeRate = 0.005;
   const withdrawFeeRate = 0.002;
   const activeFeeRate = modal === "deposit" ? depositFeeRate : withdrawFeeRate;
+  const fallbackFeeAmount = safeAmount * activeFeeRate;
+  const fallbackCreditedAmount = Math.max(safeAmount - fallbackFeeAmount, 0);
+  const fallbackReceiptUsd = estimateUsd * (1 - depositFeeRate);
 
-  const protocolFeeAmount = safeAmount * activeFeeRate;
-  const netReceiptUsd = estimateUsd * (1 - depositFeeRate);
-  const netReceiveAmount = Math.max(safeAmount - protocolFeeAmount, 0);
+  const previewFeeAmount = hasPreview ? previewValues[0] : null;
+  const previewTokenAmount = hasPreview ? previewValues[1] : null;
+  const previewReceiptAmount = hasPreview ? previewValues[2] : null;
 
   const protocolFeeText =
-    safeAmount <= 0
-      ? "—"
-      : `≈ ${formatPreviewNumber(protocolFeeAmount)} ${selectedToken.symbol}`;
+    previewLoading
+      ? "Reading..."
+      : safeAmount <= 0
+        ? "—"
+        : typeof previewFeeAmount === "bigint"
+          ? `${formatAmount(previewFeeAmount, selectedToken.decimals, 6)} ${selectedToken.symbol}`
+          : `≈ ${formatPreviewNumber(fallbackFeeAmount)} ${selectedToken.symbol}`;
 
   const expectedText =
-    safeAmount <= 0
-      ? "—"
-      : modal === "deposit"
-        ? `≈ ${formatPreviewNumber(netReceiptUsd, 4)} rINDEX`
-        : `≈ ${formatPreviewNumber(netReceiveAmount)} ${selectedToken.symbol}`;
+    previewLoading
+      ? "Reading..."
+      : safeAmount <= 0
+        ? "—"
+        : modal === "deposit"
+          ? typeof previewReceiptAmount === "bigint"
+            ? `${formatAmount(previewReceiptAmount, 18, 6)} rINDEX`
+            : `≈ ${formatPreviewNumber(fallbackReceiptUsd, 4)} rINDEX`
+          : typeof previewTokenAmount === "bigint"
+            ? `${formatAmount(previewTokenAmount, selectedToken.decimals, 6)} ${selectedToken.symbol}`
+            : `≈ ${formatPreviewNumber(fallbackCreditedAmount)} ${selectedToken.symbol}`;
+
+  const secondaryText =
+    previewLoading
+      ? "Reading..."
+      : safeAmount <= 0
+        ? "—"
+        : modal === "deposit"
+          ? typeof previewTokenAmount === "bigint"
+            ? `${formatAmount(previewTokenAmount, selectedToken.decimals, 6)} ${selectedToken.symbol}`
+            : `≈ ${formatPreviewNumber(fallbackCreditedAmount)} ${selectedToken.symbol}`
+          : typeof previewReceiptAmount === "bigint"
+            ? `${formatAmount(previewReceiptAmount, 18, 6)} rINDEX`
+            : `≈ ${formatPreviewNumber(estimateUsd, 4)} rINDEX`;
 
   return (
     <div className="modalWrap">
@@ -1007,6 +1110,7 @@ function ActionModal({
           <div><span>Estimated USD value</span><strong>{formatUsd(estimateUsd)}</strong></div>
           <div><span>{modal === "deposit" ? "Protocol fee" : "Withdrawal fee"}</span><strong>{protocolFeeText}</strong></div>
           <div><span>{modal === "deposit" ? "Expected receipt" : "Expected receive"}</span><strong>{expectedText}</strong></div>
+          <div><span>{modal === "deposit" ? "Credited amount" : "rINDEX burn"}</span><strong>{secondaryText}</strong></div>
         </div>
 
         <button
@@ -1022,7 +1126,7 @@ function ActionModal({
         </button>
 
         <p className="fineprint">
-          Estimates are UI previews. Final fee and receipt/burn are enforced by the verified contract. No APY, no guaranteed yield.
+          Preview values are read from the verified contract when available. Balances may take a few seconds to refresh after confirmation. No APY, no guaranteed yield.
         </p>
       </div>
     </div>
