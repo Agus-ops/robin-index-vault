@@ -1252,14 +1252,20 @@ function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sw
           <button disabled>Per-token sweep enabled</button>
         </div>
         <div>
-          <strong>Emergency Pause</strong>
-          <p>Pause or resume vault operations during testnet safety events.</p>
-          <button disabled>Coming soon</button>
+          <strong>Vault Safety</strong>
+          <p>
+            Emergency controls remain contract-level operator functions and are not
+            exposed through the public interface.
+          </p>
+          <button disabled>Contract controlled</button>
         </div>
         <div>
-          <strong>Additional Operator Actions</strong>
-          <p>Higher-risk controls remain manual and require the connected operator wallet.</p>
-          <button disabled>Coming soon</button>
+          <strong>Operator Actions</strong>
+          <p>
+            Treasury sweeping is the only routine operator action exposed in the
+            public dashboard.
+          </p>
+          <button disabled>Configured</button>
         </div>
       </div>
     </section>
