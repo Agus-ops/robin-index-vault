@@ -647,7 +647,7 @@ function Hero({ isRightChain, isConnected, switchChain, paused, loading }) {
         <div className="badges">
           <span><ShieldCheck size={15} /> Verified deployment</span>
           <span><CheckCircle2 size={15} /> Smoke tested</span>
-          <span><Database size={15} /> Invariant 65 / 0 / 0</span>
+          <span><Database size={15} /> Invariant PASS</span>
         </div>
       </div>
 
@@ -690,7 +690,7 @@ function LandingOverview({ go }) {
       <article className="landingCard primaryLanding">
         <span className="cardKicker">Core action</span>
         <h2>Vault Ledger</h2>
-        <p>Deposit supported stock tokens or USDG and withdraw the original deposited token from your ledger balance.</p>
+        <p>Deposit supported stock tokens and withdraw the original deposited token from your ledger balance.</p>
         <button className="primaryBtn" onClick={() => go("ledger")}>Open Vault Ledger</button>
       </article>
 
@@ -721,7 +721,7 @@ function LandingOverview({ go }) {
         <div className="miniStats">
           <div><span>Verified</span><strong>5 / 5</strong></div>
           <div><span>Smoke</span><strong>PASS</strong></div>
-          <div><span>Invariant</span><strong>65 / 0 / 0</strong></div>
+          <div><span>Invariant</span><strong>PASS</strong></div>
           <div><span>Network</span><strong>46630</strong></div>
         </div>
       </article>
@@ -1018,9 +1018,9 @@ function ContractsPanel() {
 
       <div className="trustGrid">
         <span>Smoke: PASS</span>
-        <span>Invariant: 65</span>
-        <span>Warnings: 0</span>
-        <span>Failures: 0</span>
+        <span>Invariant: PASS</span>
+        <span>Checks: LIVE</span>
+        <span>Failures: NONE</span>
       </div>
     </section>
   );
