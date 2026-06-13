@@ -26,6 +26,7 @@ import {
   shortAddress,
 } from "./lib/contracts";
 import "./styles.css";
+import RewardPanel from "./components/RewardPanel";
 
 const USER_VIEWS = [
   ["overview", "Dashboard Overview"],
@@ -601,7 +602,8 @@ function App() {
             <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="oracle" onSweepFees={runSweepFees} sweepingSymbol={sweepingSymbol} />
           </>
         )}
-      </main>
+            <RewardPanel />
+    </main>
 
       {modal && (
         <ActionModal
