@@ -572,7 +572,14 @@ function App() {
               subtitle="Protocol fees are split into transparent buckets. Rewards are fee-funded only."
             />
             <div className="singlePanel">
-              <TreasuryPanel data={data} />
+              <TreasuryPanel
+                data={data}
+                isOperator={isOperator}
+                isConnected={isConnected}
+                isRightChain={isRightChain}
+                onSweepFees={runSweepFees}
+                sweepingSymbol={sweepingSymbol}
+              />
             </div>
           </>
         )}
@@ -909,7 +916,7 @@ function PortfolioPanel({ data, isConnected, loading }) {
   );
 }
 
-function TreasuryPanel({ data }) {
+function TreasuryPanel({ data, isOperator, isConnected, isRightChain, onSweepFees, sweepingSymbol }) {
   return (
     <section id="treasury" className="panel treasuryPanel">
       <div className="sectionHead">
@@ -959,6 +966,7 @@ function TreasuryPanel({ data }) {
       <div className="treasuryTokenGrid">
         {TOKENS.map((token) => {
           const buckets = data.buckets[token.symbol] || [0n, 0n, 0n, 0n];
+          const pendingForSweep = data.pendingFees[token.symbol] || 0n;
 
           return (
             <article className="treasuryTokenCard" key={token.symbol}>
@@ -970,13 +978,26 @@ function TreasuryPanel({ data }) {
               <div className="treasuryMetricRows">
                 <div>
                   <span>Pending fees</span>
-                  <strong>{formatAmount(data.pendingFees[token.symbol] || 0n, token.decimals, 6)} {token.symbol}</strong>
+                  <strong>{formatAmount(pendingForSweep, token.decimals, 6)} {token.symbol}</strong>
                 </div>
                 <div>
                   <span>Total deposits</span>
                   <strong>{formatAmount(data.totalDeposits[token.symbol] || 0n, token.decimals, 4)} {token.symbol}</strong>
                 </div>
               </div>
+
+              {isOperator && (
+                <div className="treasuryOperatorRow">
+                  <button
+                    className="secondaryBtn"
+                    disabled={!isConnected || !isRightChain || pendingForSweep <= 0n || sweepingSymbol === token.symbol}
+                    onClick={() => onSweepFees?.(token)}
+                  >
+                    {sweepingSymbol === token.symbol ? "Sweeping..." : pendingForSweep > 0n ? "Sweep Fees" : "No Fees"}
+                  </button>
+                  <span>Operator only</span>
+                </div>
+              )}
 
               <div className="treasuryBucketMini">
                 <div><span>Reserve</span><strong>{formatAmount(buckets[0], token.decimals, 6)}</strong></div>

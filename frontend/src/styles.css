@@ -2753,3 +2753,37 @@ h1 {
       linear-gradient(135deg, rgba(18, 88, 58, 0.66), rgba(5, 54, 35, 0.74));
   }
 }
+
+.treasuryOperatorRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.85rem 0;
+  padding: 0.7rem;
+  border: 1px solid rgba(126, 255, 181, 0.14);
+  border-radius: 16px;
+  background: rgba(3, 20, 12, 0.42);
+}
+
+.treasuryOperatorRow button {
+  min-height: 38px;
+  padding: 0.55rem 0.85rem;
+}
+
+.treasuryOperatorRow span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .treasuryOperatorRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .treasuryOperatorRow span {
+    text-align: center;
+  }
+}
