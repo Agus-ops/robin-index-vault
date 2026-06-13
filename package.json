@@ -23,7 +23,8 @@
     "test-early-withdraw": "node scripts/test-early-withdraw-fee.js",
     "test-daily-cooldown": "node scripts/test-daily-rebalance-cooldown.js",
     "test-multi-user": "node scripts/test-multi-user-ledger.js",
-    "deploy-reward": "node scripts/deploy-reward-distributor.js"
+    "deploy-reward": "node scripts/deploy-reward-distributor.js",
+    "oracle-keeper": "node scripts/oracle-keeper.js"
   },
   "keywords": [],
   "author": "",
