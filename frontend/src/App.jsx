@@ -602,7 +602,6 @@ function App() {
             <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="oracle" onSweepFees={runSweepFees} sweepingSymbol={sweepingSymbol} />
           </>
         )}
-            <RewardPanel />
     </main>
 
       {modal && (
@@ -989,6 +988,8 @@ function TreasuryPanel({ data }) {
           );
         })}
       </div>
+
+      <RewardPanel />
 
       <p className="fineprint">
         Rewards are distributed only from collected protocol fees. This page does not imply APY,

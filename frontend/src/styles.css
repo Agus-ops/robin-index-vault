@@ -2290,3 +2290,356 @@ h1 {
 .adminTokenCard button:not(:disabled):active {
   transform: translateY(1px);
 }
+
+/* Reward Panel v2 */
+.rewardPanelClean {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 20px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(135, 255, 181, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(104, 255, 184, 0.08), transparent 36%),
+    rgba(3, 38, 24, 0.70);
+}
+
+.rewardPanelClean *,
+.rewardPanelClean *::before,
+.rewardPanelClean *::after {
+  box-sizing: border-box;
+  transition: none !important;
+  animation: none !important;
+}
+
+.rewardPanelHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.rewardPanelHead h2 {
+  margin: 0 0 5px;
+  color: #f2fff7;
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.rewardEyebrow {
+  margin: 0 0 6px;
+  color: #7dffb3;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.rewardMuted {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(230, 255, 239, 0.68);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.rewardRefreshButton,
+.rewardClaimButton {
+  border: 0;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.rewardRefreshButton {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: rgba(145, 255, 188, 0.13);
+  color: #edfff3;
+  border: 1px solid rgba(145, 255, 188, 0.15);
+}
+
+.rewardSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-bottom: 12px;
+}
+
+.rewardSummaryCard {
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid rgba(145, 255, 188, 0.10);
+  border-radius: 13px;
+  background: rgba(0, 20, 12, 0.24);
+}
+
+.rewardSummaryCard span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(230, 255, 239, 0.56);
+  font-size: 10px;
+}
+
+.rewardSummaryCard strong {
+  color: #f2fff7;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.rewardAssetGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rewardAssetCard {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(135, 255, 181, 0.14);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 78% 0%, rgba(104, 255, 184, 0.12), transparent 38%),
+    linear-gradient(145deg, rgba(30, 86, 61, 0.72), rgba(5, 46, 31, 0.76));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.rewardAssetTop {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+
+.rewardSymbol {
+  display: block;
+  color: #f2fff7;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.rewardSubtext {
+  display: block;
+  margin-top: 4px;
+  color: rgba(230, 255, 239, 0.52);
+  font-size: 10px;
+}
+
+.rewardBadgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.rewardBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.13);
+  color: rgba(230, 255, 239, 0.78);
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.rewardBadgeOk {
+  background: rgba(74, 222, 128, 0.15);
+  color: #a7ffbf;
+}
+
+.rewardBadgeInfo {
+  background: rgba(45, 212, 191, 0.13);
+  color: #a7fff3;
+}
+
+.rewardMetricGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.rewardMetric {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(2, 33, 21, 0.38);
+  border: 1px solid rgba(135, 255, 181, 0.075);
+}
+
+.rewardMetric span,
+.rewardClaimRow span {
+  display: block;
+  margin-bottom: 3px;
+  color: rgba(230, 255, 239, 0.50);
+  font-size: 9px;
+}
+
+.rewardMetric strong,
+.rewardClaimRow strong {
+  display: block;
+  color: #f2fff7;
+  font-size: 11px;
+  word-break: break-word;
+}
+
+.rewardClaimRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(145, 255, 188, 0.08);
+}
+
+.rewardClaimButton {
+  min-width: 72px;
+  padding: 8px 11px;
+  background: linear-gradient(135deg, #a7ff83, #5eead4);
+  color: #032215;
+  font-size: 11px;
+}
+
+.rewardClaimButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.rewardLoading {
+  padding: 14px;
+  border-radius: 13px;
+  background: rgba(0, 20, 12, 0.24);
+  color: rgba(230, 255, 239, 0.70);
+}
+
+.rewardSuccess,
+.rewardError {
+  margin: 12px 0 0;
+  font-weight: 900;
+}
+
+.rewardSuccess {
+  color: #a7ffbf;
+}
+
+.rewardError {
+  color: #fca5a5;
+}
+
+@media (max-width: 900px) {
+  .rewardAssetGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .rewardPanelClean {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 20px;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(135, 255, 181, 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(104, 255, 184, 0.08), transparent 36%),
+    rgba(3, 38, 24, 0.70);
+}
+
+  .rewardPanelHead {
+    display: block;
+  }
+
+  .rewardRefreshButton {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .rewardSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .rewardAssetGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .rewardAssetCard {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(135, 255, 181, 0.14);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 78% 0%, rgba(104, 255, 184, 0.12), transparent 38%),
+    linear-gradient(145deg, rgba(30, 86, 61, 0.72), rgba(5, 46, 31, 0.76));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+  .rewardMetricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rewardClaimRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .rewardClaimButton {
+    min-width: 82px;
+  }
+}
+
+@media (max-width: 390px) {
+  .rewardMetricGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .rewardClaimRow {
+    grid-template-columns: 1fr;
+  }
+
+  .rewardClaimButton {
+    width: 100%;
+  }
+}
+/* End Reward Panel v2 */
+
+/* Reward Panel color polish: match Treasury token bucket cards */
+.rewardPanelClean {
+  background:
+    radial-gradient(circle at 82% 0%, rgba(99, 255, 182, 0.055), transparent 34%),
+    rgba(3, 38, 24, 0.66) !important;
+}
+
+.rewardAssetCard {
+  background:
+    radial-gradient(circle at 78% 0%, rgba(122, 255, 194, 0.075), transparent 34%),
+    linear-gradient(145deg, rgba(25, 75, 52, 0.58), rgba(5, 44, 30, 0.74)) !important;
+  border-color: rgba(135, 255, 181, 0.13) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+}
+
+.rewardMetric {
+  background: rgba(1, 31, 20, 0.34) !important;
+  border-color: rgba(135, 255, 181, 0.055) !important;
+}
+
+.rewardSummaryCard {
+  background: rgba(1, 31, 20, 0.30) !important;
+  border-color: rgba(135, 255, 181, 0.10) !important;
+}
+
+.rewardBadgeOk {
+  background: rgba(74, 222, 128, 0.13) !important;
+}
+
+.rewardBadgeInfo {
+  background: rgba(45, 212, 191, 0.105) !important;
+}
+
+.rewardClaimButton {
+  background: linear-gradient(135deg, rgba(167, 255, 131, 0.70), rgba(94, 234, 212, 0.68)) !important;
+}
