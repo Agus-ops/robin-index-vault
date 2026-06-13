@@ -84,6 +84,16 @@ function normalizeBuckets(value) {
   return [vals[0] || 0n, vals[1] || 0n, vals[2] || 0n, vals[3] || 0n];
 }
 
+const VAULT_SWEEP_ABI = [
+  {
+    type: "function",
+    name: "sweepFees",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "token", type: "address" }],
+    outputs: [],
+  },
+];
+
 function App() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
@@ -100,6 +110,7 @@ function App() {
   const [data, setData] = useState(emptyData());
   const [loading, setLoading] = useState(false);
   const [writeBusy, setWriteBusy] = useState(false);
+  const [sweepingSymbol, setSweepingSymbol] = useState(null);
   const [toast, setToast] = useState(null);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [preview, setPreview] = useState(null);
@@ -228,6 +239,39 @@ function App() {
     }
   }
 
+
+  async function runSweepFees(token) {
+    if (!token || !isOperator || !isConnected || !isRightChain || sweepingSymbol) return;
+
+    const pending = data.pendingFees?.[token.symbol] || 0n;
+
+    if (pending <= 0n) {
+      showToast("info", `No pending fees for ${token.symbol}`);
+      return;
+    }
+
+    const ok = window.confirm(`Sweep pending ${token.symbol} protocol fees into treasury buckets?`);
+
+    if (!ok) return;
+
+    setSweepingSymbol(token.symbol);
+
+    try {
+      const hash = await writeContractAsync({
+        address: ADDRESSES.vault,
+        abi: VAULT_SWEEP_ABI,
+        functionName: "sweepFees",
+        args: [token.address],
+      });
+
+      showToast("info", `Sweep submitted: ${token.symbol}`, hash);
+      await waitForTx(hash);
+    } catch (err) {
+      showToast("error", err?.shortMessage || err?.message || `Sweep failed: ${token.symbol}`);
+    } finally {
+      setSweepingSymbol(null);
+    }
+  }
 
   async function loadVaultData() {
     if (!publicClient) return;
@@ -534,14 +578,14 @@ function App() {
         {view === "admin" && (
           <>
             <ViewHero title="Operator Control Room" subtitle="Read-only operator dashboard for vault, fee, and treasury state." />
-            <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="admin" />
+            <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="admin" onSweepFees={runSweepFees} sweepingSymbol={sweepingSymbol} />
           </>
         )}
 
         {view === "oracle" && (
           <>
             <ViewHero title="Oracle Manager" subtitle="Read-only mock oracle status for testnet vault accounting." />
-            <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="oracle" />
+            <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="oracle" onSweepFees={runSweepFees} sweepingSymbol={sweepingSymbol} />
           </>
         )}
       </main>
@@ -966,7 +1010,7 @@ function ContractsPanel() {
   );
 }
 
-function AdminPanel({ data, loading, address, isOperator, focus }) {
+function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sweepingSymbol }) {
   if (!isOperator) {
     return (
       <section className="panel adminPanel">
@@ -1145,6 +1189,18 @@ function AdminPanel({ data, loading, address, isOperator, focus }) {
                 <span>Router {formatAmount(buckets[2], token.decimals, 6)}</span>
                 <span>Ops {formatAmount(buckets[3], token.decimals, 6)}</span>
               </div>
+
+              <button
+                type="button"
+                disabled={pending <= 0n || Boolean(sweepingSymbol)}
+                onClick={() => onSweepFees(token)}
+              >
+                {sweepingSymbol === token.symbol
+                  ? `Sweeping ${token.symbol}...`
+                  : pending > 0n
+                    ? `Sweep ${token.symbol} fees`
+                    : "No fees to sweep"}
+              </button>
             </article>
           );
         })}
@@ -1153,8 +1209,8 @@ function AdminPanel({ data, loading, address, isOperator, focus }) {
       <div className="adminGrid">
         <div>
           <strong>Treasury Sweep</strong>
-          <p>Move pending protocol fees into transparent treasury buckets.</p>
-          <button disabled>Coming soon</button>
+          <p>Use the per-token buttons above when pending fees are available.</p>
+          <button disabled>Per-token sweep enabled</button>
         </div>
         <div>
           <strong>Emergency Pause</strong>

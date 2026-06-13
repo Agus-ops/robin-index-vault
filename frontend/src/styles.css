@@ -2277,3 +2277,16 @@ h1 {
   font-weight: 700;
   letter-spacing: .01em;
 }
+
+/* local polish: enabled admin sweep controls */
+.adminTokenCard button:not(:disabled) {
+  color: #04160f;
+  background: linear-gradient(135deg, #79f28f, #42d6e8);
+  border: 1px solid rgba(132, 255, 178, .35);
+  box-shadow: 0 14px 30px rgba(40, 236, 160, .14);
+  cursor: pointer;
+}
+
+.adminTokenCard button:not(:disabled):active {
+  transform: translateY(1px);
+}
