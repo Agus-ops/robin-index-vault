@@ -2643,3 +2643,113 @@ h1 {
 .rewardClaimButton {
   background: linear-gradient(135deg, rgba(167, 255, 131, 0.70), rgba(94, 234, 212, 0.68)) !important;
 }
+
+/* v0.4.0 reward status visual alignment */
+.rewardPanelClean {
+  background:
+    linear-gradient(135deg, rgba(9, 65, 42, 0.78), rgba(2, 38, 25, 0.86)),
+    radial-gradient(circle at 80% 0%, rgba(120, 255, 170, 0.08), transparent 24rem);
+  border-color: rgba(130, 255, 180, 0.18);
+}
+
+.rewardSummaryCard,
+.rewardAssetCard,
+.rewardMetric {
+  background:
+    linear-gradient(135deg, rgba(18, 88, 58, 0.62), rgba(5, 54, 35, 0.72));
+  border: 1px solid rgba(130, 255, 180, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.rewardAssetCard {
+  border-radius: 18px;
+}
+
+.rewardMetric {
+  border-radius: 12px;
+}
+
+.rewardBadgeOk,
+.rewardBadgeInfo {
+  background: rgba(120, 255, 170, 0.12);
+  border: 1px solid rgba(120, 255, 170, 0.18);
+}
+
+@media (min-width: 900px) {
+  .rewardSummaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .rewardAssetGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .rewardAssetCard {
+    padding: 14px;
+    min-height: auto;
+  }
+
+  .rewardAssetTop {
+    margin-bottom: 8px;
+  }
+
+  .rewardSymbol {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .rewardSubtext {
+    font-size: 12px;
+  }
+
+  .rewardBadgeRow {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .rewardBadge {
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+
+  .rewardMetricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  .rewardMetric {
+    padding: 8px;
+  }
+
+  .rewardMetric span,
+  .rewardClaimRow span {
+    font-size: 10px;
+  }
+
+  .rewardMetric strong,
+  .rewardClaimRow strong {
+    font-size: 12px;
+  }
+
+  .rewardClaimRow {
+    padding: 8px;
+    margin-top: 8px;
+  }
+
+  .rewardClaimButton {
+    min-height: 34px;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 899px) {
+  .rewardSummaryCard,
+  .rewardAssetCard,
+  .rewardMetric {
+    background:
+      linear-gradient(135deg, rgba(18, 88, 58, 0.66), rgba(5, 54, 35, 0.74));
+  }
+}
