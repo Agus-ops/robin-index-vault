@@ -1140,10 +1140,10 @@ function AdminPanel({ data, loading, address, isOperator, focus }) {
               </div>
 
               <div className="adminBucketMini">
-                <span>Reserve {formatAmount(buckets[0], token.decimals, 4)}</span>
-                <span>Rewards {formatAmount(buckets[1], token.decimals, 4)}</span>
-                <span>Router {formatAmount(buckets[2], token.decimals, 4)}</span>
-                <span>Ops {formatAmount(buckets[3], token.decimals, 4)}</span>
+                <span>Reserve {formatAmount(buckets[0], token.decimals, 6)}</span>
+                <span>Rewards {formatAmount(buckets[1], token.decimals, 6)}</span>
+                <span>Router {formatAmount(buckets[2], token.decimals, 6)}</span>
+                <span>Ops {formatAmount(buckets[3], token.decimals, 6)}</span>
               </div>
             </article>
           );
