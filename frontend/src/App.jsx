@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef} from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
@@ -53,6 +53,7 @@ function emptyData() {
     receiptBalance: 0n,
     portfolioUsd: 0,
     paused: false,
+    readIssue: null,
   };
 }
 
@@ -95,6 +96,7 @@ function App() {
   const [modal, setModal] = useState(null);
   const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
   const [amount, setAmount] = useState("");
+  const [debouncedAmount, setDebouncedAmount] = useState("");
   const [data, setData] = useState(emptyData());
   const [loading, setLoading] = useState(false);
   const [writeBusy, setWriteBusy] = useState(false);
@@ -102,6 +104,7 @@ function App() {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const previewCallId = useRef(0);
 
   const isRightChain = chainId === CHAIN_ID;
 
@@ -110,69 +113,10 @@ function App() {
   }, [address]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadActionPreview() {
-      setPreview(null);
-
-      if (!modal || !selectedToken || !publicClient || !address || !isConnected || !isRightChain || !amount) {
-        setPreviewLoading(false);
-        return;
-      }
-
-      let parsedAmount;
-
-      try {
-        parsedAmount = parseUnits(normalizeAmountInput(amount), selectedToken.decimals);
-        if (parsedAmount <= 0n) {
-          setPreviewLoading(false);
-          return;
-        }
-      } catch {
-        setPreviewLoading(false);
-        return;
-      }
-
-      setPreviewLoading(true);
-
-      try {
-        const result = await publicClient.readContract({
-          address: ADDRESSES.vault,
-          abi: ABIS.RobinIndexVault,
-          functionName: modal === "deposit" ? "previewDeposit" : "previewWithdraw",
-          args: modal === "deposit"
-            ? [selectedToken.address, parsedAmount]
-            : [address, selectedToken.address, parsedAmount],
-        });
-
-        if (!cancelled) {
-          setPreview({
-            type: modal,
-            token: selectedToken.symbol,
-            amount: parsedAmount,
-            result,
-          });
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setPreview({
-            type: modal,
-            token: selectedToken.symbol,
-            amount: parsedAmount,
-            error: err?.shortMessage || err?.message || "Preview unavailable",
-          });
-        }
-      } finally {
-        if (!cancelled) setPreviewLoading(false);
-      }
-    }
-
-    loadActionPreview();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [modal, selectedToken, amount, publicClient, address, isConnected, isRightChain]);
+    previewCallId.current += 1;
+    setPreview(null);
+    setPreviewLoading(false);
+  }, [modal, selectedToken?.address, amount]);
 
   async function readMaybe(contractAddress, abi, functionName, args = []) {
     try {
@@ -197,6 +141,8 @@ function App() {
     if (!publicClient || !hash) return;
 
     await publicClient.waitForTransactionReceipt({ hash });
+
+    showToast("success", "Transaction confirmed. Refreshing balances...", hash);
 
     // Refresh immediately, then retry after short delays because RPC/indexed reads
     // can lag a few seconds after a confirmed transaction.
@@ -369,8 +315,8 @@ function App() {
         }
       }
 
-      if (address && next.portfolioUsd === 0) {
-        let fallbackPortfolioUsd = 0;
+      if (address) {
+        let ledgerPortfolioUsd = 0;
 
         for (const token of TOKENS) {
           const rawBalance = next.vaultBalances[token.symbol] || 0n;
@@ -378,11 +324,24 @@ function App() {
           const tokenPrice = next.prices[token.symbol] || token.fallbackPrice || 0;
 
           if (Number.isFinite(tokenAmount) && Number.isFinite(tokenPrice)) {
-            fallbackPortfolioUsd += tokenAmount * tokenPrice;
+            ledgerPortfolioUsd += tokenAmount * tokenPrice;
           }
         }
 
-        next.portfolioUsd = fallbackPortfolioUsd;
+        // Display the value calculated from vault ledger balances and oracle prices.
+        // This avoids wrong UI scaling if the contract portfolio helper returns a different decimal format.
+        if (ledgerPortfolioUsd > 0 || next.portfolioUsd === 0) {
+          next.portfolioUsd = ledgerPortfolioUsd;
+        }
+      }
+
+      const oracleChecks = TOKENS.map((token) => next.fresh[token.symbol]);
+      const failedOracleChecks = oracleChecks.filter((value) => value === null).length;
+
+      if (failedOracleChecks === TOKENS.length) {
+        next.readIssue = "RPC reads failed. Check wallet browser/RPC access and retry.";
+      } else if (failedOracleChecks > 0) {
+        next.readIssue = "Some contract reads failed. Refresh or retry shortly.";
       }
 
       setData(next);
@@ -394,6 +353,11 @@ function App() {
   useEffect(() => {
     loadVaultData();
   }, [address, publicClient, refreshNonce]);
+
+  function refreshVaultData() {
+    showToast("info", "Refreshing vault state from contract...");
+    setRefreshNonce((x) => x + 1);
+  }
 
   function go(nextView) {
     setView(nextView);
@@ -407,9 +371,24 @@ function App() {
     setAmount("");
   }
 
+  async function refreshPreview() {
+    // Disabled for mobile-browser stability.
+    // Contract preview reads can freeze the modal in some browsers.
+    // UI uses estimates; final fee/mint/burn values are enforced by the verified contract.
+    return;
+  }
+
   function closeModal() {
+    previewCallId.current += 1;
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+
     setModal(null);
     setAmount("");
+    setDebouncedAmount("");
+    setPreview(null);
+    setPreviewLoading(false);
   }
 
   function refresh() {
@@ -554,15 +533,15 @@ function App() {
 
         {view === "admin" && (
           <>
-            <ViewHero title="Operator Control Room" subtitle="Operator tools remain gated and hidden from normal users." />
-            <AdminPanel isOperator={isOperator} focus="admin" />
+            <ViewHero title="Operator Control Room" subtitle="Read-only operator dashboard for vault, fee, and treasury state." />
+            <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="admin" />
           </>
         )}
 
         {view === "oracle" && (
           <>
-            <ViewHero title="Oracle Manager" subtitle="Admin-only mock oracle controls for the testnet deployment." />
-            <AdminPanel isOperator={isOperator} focus="oracle" />
+            <ViewHero title="Oracle Manager" subtitle="Read-only mock oracle status for testnet vault accounting." />
+            <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="oracle" />
           </>
         )}
       </main>
@@ -708,6 +687,8 @@ function LandingOverview({ go }) {
 }
 
 function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRightChain }) {
+  const hasReadIssue = Boolean(data.readIssue);
+
   return (
     <section id="ledger" className="panel">
       <div className="sectionHead">
@@ -716,7 +697,7 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
           <p>Ledger-based positions per deposited asset.</p>
         </div>
         <button className="secondaryBtn" onClick={refresh}>
-          {loading ? <Loader2 className="spin" size={15} /> : "Refresh"}
+          {loading ? <><Loader2 className="spin" size={15} /> Reading...</> : "Refresh"}
         </button>
       </div>
 
@@ -728,6 +709,13 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
               ? "Connect a wallet to load balances and enable vault actions."
               : "Switch to Robinhood Chain Testnet to use vault actions."}
           </span>
+        </div>
+      )}
+
+      {hasReadIssue && (
+        <div className="ledgerNotice readIssue">
+          <strong>RPC retry</strong>
+          <span>{data.readIssue}</span>
         </div>
       )}
 
@@ -745,7 +733,7 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
                   <strong>{token.symbol}</strong>
                   <span>{token.name}</span>
                   <em className={fresh === false ? "miniBadge stale" : "miniBadge fresh"}>
-                    {fresh === false ? "Oracle stale" : fresh === true ? "Oracle fresh" : "Oracle check"}
+                    {hasReadIssue ? "RPC retry" : fresh === false ? "Oracle stale" : fresh === true ? "Oracle fresh" : "Oracle check"}
                   </em>
                 </div>
               </div>
@@ -753,22 +741,30 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
               <div className="assetData">
                 <div>
                   <span>Oracle price</span>
-                  <strong>{formatUsd(data.prices[token.symbol] || token.fallbackPrice)}</strong>
+                  <strong>{loading ? "Reading..." : hasReadIssue ? "RPC retry" : formatUsd(data.prices[token.symbol] || token.fallbackPrice)}</strong>
                 </div>
                 <div>
                   <span>Wallet</span>
                   <strong>
-                    {isConnected
-                      ? `${formatAmount(data.walletBalances[token.symbol] || 0n, token.decimals)} ${token.symbol}`
-                      : "—"}
+                    {loading
+                      ? "Reading..."
+                      : hasReadIssue
+                        ? "RPC retry"
+                        : isConnected
+                          ? `${formatAmount(data.walletBalances[token.symbol] || 0n, token.decimals)} ${token.symbol}`
+                          : "—"}
                   </strong>
                 </div>
                 <div>
                   <span>Vault ledger</span>
                   <strong>
-                    {isConnected
-                      ? `${formatAmount(data.vaultBalances[token.symbol] || 0n, token.decimals)} ${token.symbol}`
-                      : "—"}
+                    {loading
+                      ? "Reading..."
+                      : hasReadIssue
+                        ? "RPC retry"
+                        : isConnected
+                          ? `${formatAmount(data.vaultBalances[token.symbol] || 0n, token.decimals)} ${token.symbol}`
+                          : "—"}
                   </strong>
                 </div>
               </div>
@@ -970,7 +966,7 @@ function ContractsPanel() {
   );
 }
 
-function AdminPanel({ isOperator, focus }) {
+function AdminPanel({ data, loading, address, isOperator, focus }) {
   if (!isOperator) {
     return (
       <section className="panel adminPanel">
@@ -985,30 +981,189 @@ function AdminPanel({ isOperator, focus }) {
     );
   }
 
+  const readStatus = data?.readIssue ? "RPC retry" : loading ? "Reading" : "Live";
+  const vaultState = data?.paused ? "Paused" : "Active";
+
+  const totalPendingUsd = TOKENS.reduce((sum, token) => {
+    const raw = data?.pendingFees?.[token.symbol] || 0n;
+    const amount = Number(formatUnits(raw, token.decimals));
+    const price = data?.prices?.[token.symbol] || token.fallbackPrice || 0;
+
+    return Number.isFinite(amount) && Number.isFinite(price)
+      ? sum + amount * price
+      : sum;
+  }, 0);
+
+  const totalDepositsUsd = TOKENS.reduce((sum, token) => {
+    const raw = data?.totalDeposits?.[token.symbol] || 0n;
+    const amount = Number(formatUnits(raw, token.decimals));
+    const price = data?.prices?.[token.symbol] || token.fallbackPrice || 0;
+
+    return Number.isFinite(amount) && Number.isFinite(price)
+      ? sum + amount * price
+      : sum;
+  }, 0);
+
+  if (focus === "oracle") {
+    return (
+      <section id="oracle" className="panel adminPanel">
+        <div className="sectionHead">
+          <div>
+            <h2>Oracle Manager</h2>
+            <p>Read-only mock oracle status. Write controls remain disabled for the next wiring pass.</p>
+          </div>
+          <span className="dangerPill">Admin</span>
+        </div>
+
+        <div className="adminSummaryGrid">
+          <div>
+            <span>Oracle mode</span>
+            <strong>Mock pricing</strong>
+            <em>Testnet accounting only</em>
+          </div>
+          <div>
+            <span>Read status</span>
+            <strong>{readStatus}</strong>
+            <em>{data?.readIssue || "Latest local read state"}</em>
+          </div>
+          <div>
+            <span>Operator</span>
+            <strong>{shortAddress(address)}</strong>
+            <em>Connected admin wallet</em>
+          </div>
+        </div>
+
+        <div className="adminTokenGrid">
+          {TOKENS.map((token) => {
+            const fresh = data?.fresh?.[token.symbol];
+            const price = data?.prices?.[token.symbol] || token.fallbackPrice || 0;
+
+            return (
+              <article className="adminTokenCard" key={token.symbol}>
+                <div>
+                  <strong>{token.symbol}</strong>
+                  <span>{token.name}</span>
+                </div>
+
+                <div className="adminMetricRows">
+                  <div>
+                    <span>Mock price</span>
+                    <strong>{loading ? "Reading..." : formatUsd(price)}</strong>
+                  </div>
+                  <div>
+                    <span>Status</span>
+                    <strong>
+                      {data?.readIssue
+                        ? "RPC retry"
+                        : fresh === true
+                          ? "Fresh"
+                          : fresh === false
+                            ? "Stale"
+                            : "Checking"}
+                    </strong>
+                  </div>
+                </div>
+
+                <button disabled>Update price: Coming soon</button>
+              </article>
+            );
+          })}
+        </div>
+
+        <p className="fineprint">
+          Oracle values are mock testnet prices used for vault accounting. They are not live market data.
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section id="admin" className="panel adminPanel">
       <div className="sectionHead">
         <div>
-          <h2>{focus === "oracle" ? "Oracle Manager" : "Operator Control Room"}</h2>
-          <p>Operator-only panel. Write controls are planned for the next wiring pass.</p>
+          <h2>Operator Control Room</h2>
+          <p>Read-only vault operations view. Write controls remain disabled for safety.</p>
         </div>
         <span className="dangerPill">Admin</span>
       </div>
 
-      <div className="adminGrid">
+      <div className="adminSummaryGrid">
         <div>
-          <strong>Oracle Manager</strong>
-          <p>Oracle price controls for supported vault assets.</p>
-          <button disabled>Coming soon</button>
+          <span>Operator</span>
+          <strong>{shortAddress(address)}</strong>
+          <em>Authorized wallet</em>
         </div>
+        <div>
+          <span>Vault state</span>
+          <strong>{loading ? "Reading..." : vaultState}</strong>
+          <em>{data?.paused ? "Emergency pause active" : "Deposits and withdrawals available"}</em>
+        </div>
+        <div>
+          <span>Read status</span>
+          <strong>{readStatus}</strong>
+          <em>{data?.readIssue || "Contract reads available"}</em>
+        </div>
+        <div>
+          <span>Pending fees</span>
+          <strong>{formatUsd(totalPendingUsd)}</strong>
+          <em>Estimated by mock oracle prices</em>
+        </div>
+        <div>
+          <span>Total deposits</span>
+          <strong>{formatUsd(totalDepositsUsd)}</strong>
+          <em>Vault-wide token ledger value</em>
+        </div>
+      </div>
+
+      <div className="adminTokenGrid">
+        {TOKENS.map((token) => {
+          const pending = data?.pendingFees?.[token.symbol] || 0n;
+          const total = data?.totalDeposits?.[token.symbol] || 0n;
+          const buckets = data?.buckets?.[token.symbol] || [0n, 0n, 0n, 0n];
+
+          return (
+            <article className="adminTokenCard" key={token.symbol}>
+              <div>
+                <strong>{token.symbol}</strong>
+                <span>{token.name}</span>
+              </div>
+
+              <div className="adminMetricRows">
+                <div>
+                  <span>Pending fees</span>
+                  <strong>{loading ? "Reading..." : `${formatAmount(pending, token.decimals, 6)} ${token.symbol}`}</strong>
+                </div>
+                <div>
+                  <span>Total deposits</span>
+                  <strong>{loading ? "Reading..." : `${formatAmount(total, token.decimals, 4)} ${token.symbol}`}</strong>
+                </div>
+              </div>
+
+              <div className="adminBucketMini">
+                <span>Reserve {formatAmount(buckets[0], token.decimals, 4)}</span>
+                <span>Rewards {formatAmount(buckets[1], token.decimals, 4)}</span>
+                <span>Router {formatAmount(buckets[2], token.decimals, 4)}</span>
+                <span>Ops {formatAmount(buckets[3], token.decimals, 4)}</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="adminGrid">
         <div>
           <strong>Treasury Sweep</strong>
           <p>Move pending protocol fees into transparent treasury buckets.</p>
           <button disabled>Coming soon</button>
         </div>
         <div>
-          <strong>Emergency</strong>
-          <p>Emergency controls for testnet safety operations.</p>
+          <strong>Emergency Pause</strong>
+          <p>Pause or resume vault operations during testnet safety events.</p>
+          <button disabled>Coming soon</button>
+        </div>
+        <div>
+          <strong>Operator Actions</strong>
+          <p>Future write controls will require the connected operator wallet.</p>
           <button disabled>Coming soon</button>
         </div>
       </div>
@@ -1030,15 +1185,29 @@ function ActionModal({
   isConnected,
   isRightChain,
 }) {
+  function handleClose(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    closeModal();
+  }
+
+  function handleConfirm(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    onConfirm();
+  }
+
   const normalizedAmount = normalizeAmountInput(amount);
   const inputAmount = Number(normalizedAmount);
   const safeAmount = Number.isFinite(inputAmount) && inputAmount > 0 ? inputAmount : 0;
 
-  const previewValues = Array.isArray(preview?.result)
-    ? preview.result
-    : preview?.result
-      ? Object.values(preview.result).filter((x) => typeof x === "bigint" || typeof x === "boolean")
-      : [];
+  const previewValues = Array.isArray(preview?.values) ? preview.values : [];
 
   const hasPreview = Boolean(preview && !preview.error && previewValues.length > 0);
 
@@ -1090,14 +1259,26 @@ function ActionModal({
             : `≈ ${formatPreviewNumber(estimateUsd, 4)} rINDEX`;
 
   return (
-    <div className="modalWrap">
-      <div className="modal">
+    <div className="modalWrap" onPointerDown={(event) => {
+      if (event.target === event.currentTarget) {
+        handleClose(event);
+      }
+    }}>
+      <div className="modal" onPointerDown={(event) => event.stopPropagation()}>
         <div className="modalHead">
           <div>
             <h3>{modal === "deposit" ? "Deposit" : "Withdraw"} {selectedToken.symbol}</h3>
             <p>{modal === "deposit" ? "Deposit stock tokens into the vault ledger." : "Withdraw the original token from your vault ledger."}</p>
           </div>
-          <button className="iconBtn" onClick={closeModal}><X size={18} /></button>
+          <button
+            type="button"
+            className="iconBtn"
+            aria-label="Close modal"
+            onPointerDown={handleClose}
+            onClick={handleClose}
+          >
+            <X size={18} />
+          </button>
         </div>
 
         <label className="amountLabel">
@@ -1114,9 +1295,10 @@ function ActionModal({
         </div>
 
         <button
+          type="button"
           className="primaryBtn wide"
           disabled={writeBusy || !isConnected || !isRightChain || !amount}
-          onClick={onConfirm}
+          onClick={handleConfirm}
         >
           {writeBusy
             ? "Confirming..."
@@ -1126,7 +1308,7 @@ function ActionModal({
         </button>
 
         <p className="fineprint">
-          Preview values are read from the verified contract when available. Balances may take a few seconds to refresh after confirmation. No APY, no guaranteed yield.
+          Estimates are shown for responsiveness. Final fee, rINDEX mint, and withdrawal values are enforced by the verified contract. No APY, no guaranteed yield.
         </p>
       </div>
     </div>

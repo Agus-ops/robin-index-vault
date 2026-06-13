@@ -792,7 +792,7 @@ h1 {
 }
 
 
-/* v0.3.1 premium green UI polish */
+/* premium green UI polish */
 :root {
   --forest-bg: #06140d;
   --forest-panel: rgba(8, 38, 27, .72);
@@ -1169,7 +1169,7 @@ h1 {
 }
 
 
-/* v0.3.1 topbar and public trust layout refinement */
+/* topbar and public trust layout refinement */
 .brandBlank {
   width: 44px;
   min-width: 44px;
@@ -1254,7 +1254,7 @@ h1 {
 }
 
 
-/* v0.3.1 trust wide hard fix */
+/* trust wide hard fix */
 .trustWide {
   width: 100%;
   min-height: 168px;
@@ -1267,7 +1267,7 @@ h1 {
 }
 
 
-/* v0.3.1 front page final polish */
+/* front page final polish */
 .assetStrip {
   min-height: 150px;
   display: grid;
@@ -1338,7 +1338,7 @@ h1 {
 }
 
 
-/* v0.3.1 vault ledger UX polish */
+/* vault ledger UX polish */
 .ledgerNotice {
   display: flex;
   align-items: center;
@@ -1383,7 +1383,7 @@ h1 {
   }
 }
 
-/* v0.3.1 mobile vault density polish */
+/* mobile vault density polish */
 @media (max-width: 760px) {
   .viewHero {
     padding: 18px 0 14px;
@@ -1487,7 +1487,7 @@ h1 {
   }
 }
 
-/* v0.3.1 supported asset chip mobile balance */
+/* supported asset chip mobile balance */
 @media (max-width: 760px) {
   .assetChips {
     display: grid;
@@ -1510,13 +1510,13 @@ h1 {
   }
 }
 
-/* v0.3.1 remove repeated dashboard logo watermarks */
+/* remove repeated dashboard logo watermarks */
 .primaryLanding::after,
 .trustWide::after {
   display: none !important;
 }
 
-/* v0.3.1 drawer size polish */
+/* drawer size polish */
 @media (max-width: 760px) {
   .drawer {
     width: min(350px, 86vw);
@@ -1570,14 +1570,14 @@ h1 {
   }
 }
 
-/* v0.3.1 desktop drawer width restore */
+/* desktop drawer width restore */
 @media (min-width: 761px) {
   .drawer {
     width: min(420px, 34vw);
   }
 }
 
-/* v0.3.1 desktop modal polish */
+/* desktop modal polish */
 @media (min-width: 900px) {
   .modal {
     width: min(600px, 100%);
@@ -1622,13 +1622,13 @@ h1 {
   }
 }
 
-/* v0.3.1 modal CTA weight polish */
+/* modal CTA weight polish */
 .primaryBtn.wide {
   font-weight: 900;
 }
 
 
-/* v0.3.1 mobile network badge polish */
+/* mobile network badge polish */
 @media (max-width: 760px) {
   .chainOk,
   .chainBad {
@@ -1663,7 +1663,7 @@ h1 {
 }
 
 
-/* v0.3.1 rINDEX panel polish */
+/* rINDEX panel polish */
 .rindexPanel {
   max-width: 900px;
   overflow: hidden;
@@ -1747,14 +1747,14 @@ h1 {
   }
 }
 
-/* v0.3.1 rINDEX desktop width polish */
+/* rINDEX desktop width polish */
 @media (min-width: 900px) {
   .rindexPanel {
     max-width: 1080px;
   }
 }
 
-/* v0.3.1 mobile rINDEX centering polish */
+/* mobile rINDEX centering polish */
 @media (max-width: 760px) {
   .rindexPanel {
     width: calc(100% - 8px);
@@ -1770,7 +1770,7 @@ h1 {
   }
 }
 
-/* v0.3.1 desktop hero watermark + rINDEX alignment polish */
+/* desktop hero watermark + rINDEX alignment polish */
 @media (min-width: 900px) {
   /* move hero watermark away from the network card */
   .hero::after {
@@ -1808,7 +1808,7 @@ h1 {
   }
 }
 
-/* v0.3.1 desktop hero logo anchor polish */
+/* desktop hero logo anchor polish */
 @media (min-width: 900px) {
   .hero::after {
     left: 36px;
@@ -1831,7 +1831,7 @@ h1 {
   }
 }
 
-/* v0.3.1 move hero logo watermark into Network Status card */
+/* move hero logo watermark into Network Status card */
 .hero::after {
   display: none !important;
 }
@@ -1879,7 +1879,7 @@ h1 {
   }
 }
 
-/* v0.3.1 desktop network logo + treasury polish */
+/* desktop network logo + treasury polish */
 @media (min-width: 900px) {
   .heroCard::after {
     right: -18px;
@@ -2046,7 +2046,7 @@ h1 {
   }
 }
 
-/* v0.3.1 treasury desktop full-width polish */
+/* treasury desktop full-width polish */
 @media (min-width: 900px) {
   .singlePanel:has(.treasuryPanel) {
     width: min(1380px, 100%);
@@ -2072,7 +2072,7 @@ h1 {
   }
 }
 
-/* v0.3.1 verified contracts alignment polish */
+/* verified contracts alignment polish */
 .contractsPanel {
   max-width: 1080px;
 }
@@ -2146,4 +2146,134 @@ h1 {
     position: absolute;
     right: 0;
   }
+}
+
+/* local polish: read failure notice */
+.ledgerNotice.readIssue {
+  border-color: rgba(255, 202, 87, .28);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 202, 87, .12), transparent 38%),
+    rgba(255, 202, 87, .055);
+}
+
+.ledgerNotice.readIssue strong {
+  color: #ffe7a3;
+}
+
+/* local polish: manual contract preview button */
+.secondaryBtn.previewBtn {
+  width: 100%;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+/* contract preview button intentionally disabled for mobile stability */
+
+/* local polish: admin read-only control room */
+.adminSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.adminSummaryGrid > div,
+.adminTokenCard {
+  border: 1px solid rgba(132, 255, 178, .14);
+  background: rgba(8, 44, 29, .58);
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.adminSummaryGrid span,
+.adminTokenCard span,
+.adminMetricRows span,
+.adminBucketMini span {
+  color: rgba(226, 255, 237, .68);
+}
+
+.adminSummaryGrid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(18px, 2vw, 26px);
+}
+
+.adminSummaryGrid em {
+  display: block;
+  margin-top: 6px;
+  color: rgba(226, 255, 237, .55);
+  font-style: normal;
+  font-size: 13px;
+}
+
+.adminTokenGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.adminTokenCard > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.adminTokenCard > div:first-child strong {
+  font-size: 20px;
+}
+
+.adminMetricRows {
+  display: grid;
+  gap: 10px;
+}
+
+.adminMetricRows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(132, 255, 178, .10);
+  padding-top: 10px;
+}
+
+.adminBucketMini {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+
+.adminTokenCard button {
+  width: 100%;
+  margin-top: 14px;
+}
+
+@media (max-width: 760px) {
+  .adminSummaryGrid,
+  .adminTokenGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .adminMetricRows > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* local polish: clearer disabled admin buttons */
+.adminPanel button:disabled,
+.adminTokenCard button:disabled {
+  opacity: 1;
+  color: rgba(226, 255, 237, .58);
+  background: rgba(226, 255, 237, .075);
+  border: 1px solid rgba(226, 255, 237, .08);
+  cursor: not-allowed;
+}
+
+.adminTokenCard button:disabled {
+  font-weight: 700;
+  letter-spacing: .01em;
 }
