@@ -24,7 +24,13 @@
     "test-daily-cooldown": "node scripts/test-daily-rebalance-cooldown.js",
     "test-multi-user": "node scripts/test-multi-user-ledger.js",
     "deploy-reward": "node scripts/deploy-reward-distributor.js",
-    "oracle-keeper": "node scripts/oracle-keeper.js"
+    "oracle-keeper": "node scripts/oracle-keeper.js",
+    "reward:readiness": "node scripts/reward-readiness.cjs",
+    "reward:invariant": "node scripts/reward-invariant.cjs",
+    "reward:smoke": "node scripts/reward-smoke-live.cjs",
+    "build": "npm --prefix frontend run build",
+    "check:v0.5.0": "npm run status && npm run invariant && npm run reward:readiness && npm run reward:invariant && npm run build",
+    "fees:sweep": "node scripts/sweep-fees-all.cjs"
   },
   "keywords": [],
   "author": "",
