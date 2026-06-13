@@ -590,7 +590,7 @@ function App() {
 
         {view === "admin" && (
           <>
-            <ViewHero title="Operator Control Room" subtitle="Read-only operator dashboard for vault, fee, and treasury state." />
+            <ViewHero title="Operator Control Room" subtitle="Keeper-assisted operator dashboard for vault, fee, and treasury state." />
             <AdminPanel data={data} loading={loading} address={address} isOperator={isOperator} focus="admin" onSweepFees={runSweepFees} sweepingSymbol={sweepingSymbol} />
           </>
         )}
@@ -689,7 +689,7 @@ function LandingOverview({ go }) {
       <article className="landingCard primaryLanding">
         <span className="cardKicker">Core action</span>
         <h2>Vault Ledger</h2>
-        <p>Deposit supported testnet stock tokens and withdraw the original deposited token from your ledger balance.</p>
+        <p>Deposit supported stock tokens or USDG and withdraw the original deposited token from your ledger balance.</p>
         <button className="primaryBtn" onClick={() => go("ledger")}>Open Vault Ledger</button>
       </article>
 
@@ -729,7 +729,7 @@ function LandingOverview({ go }) {
         <div>
           <span className="cardKicker">Supported assets</span>
           <h2>Stock-token vault ledger</h2>
-          <p>The vault currently supports TSLA, AMZN, NFLX, PLTR, and AMD testnet stock tokens. Each deposit stays token-specific in the ledger and can be withdrawn back as the original asset.</p>
+          <p>The vault supports TSLA, AMZN, NFLX, PLTR, and AMD testnet stock tokens, plus USDG as a settlement-style test token. Each deposit stays token-specific in the ledger and can be withdrawn back as the original asset.</p>
         </div>
         <div className="assetChips">
           <span>TSLA</span>
@@ -1121,7 +1121,9 @@ function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sw
                   </div>
                 </div>
 
-                <button disabled>Update price: Coming soon</button>
+                <button disabled>
+                  {token.symbol === "USDG" ? "Settlement peg" : "Keeper updates active"}
+                </button>
               </article>
             );
           })}
@@ -1231,8 +1233,8 @@ function AdminPanel({ data, loading, address, isOperator, focus, onSweepFees, sw
           <button disabled>Coming soon</button>
         </div>
         <div>
-          <strong>Operator Actions</strong>
-          <p>Future write controls will require the connected operator wallet.</p>
+          <strong>Additional Operator Actions</strong>
+          <p>Higher-risk controls remain manual and require the connected operator wallet.</p>
           <button disabled>Coming soon</button>
         </div>
       </div>
