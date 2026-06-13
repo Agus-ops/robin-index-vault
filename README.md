@@ -2,6 +2,18 @@
 
 Ledger-based stock-token vault MVP on Robinhood Chain Testnet.
 
+## Live dApp UI v0.3.0
+
+Robin Index Vault now includes a public frontend deployed on Vercel.
+
+- **Open dApp:** https://robin-index-vault.vercel.app
+- **Stack:** React + Vite + RainbowKit + wagmi + Vercel
+- **Network:** Robinhood Chain Testnet, Chain ID `46630`
+- **Status:** read-only vault data, wallet balances, rINDEX balance, treasury buckets, deposit, and withdraw actions are wired to the verified v0.2.0 contracts.
+
+The frontend is a testnet interface only. It does not claim real stock ownership, guaranteed rewards, APY, APR, or real yield.
+
+
 **v0.2.0 is the public-trust verified deployment.**
 All core contracts are verified on the Robinhood Chain Testnet explorer using Solidity compiler `v0.8.34+commit.80d5c536`.
 
