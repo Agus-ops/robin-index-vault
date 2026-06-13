@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { formatUnits } from "viem";
-import { useAccount, useChainId, usePublicClient, useSwitchChain } from "wagmi";
+import { formatUnits, parseUnits } from "viem";
+import { useAccount, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import {
   CheckCircle2,
   Database,
@@ -19,6 +19,7 @@ import { ABIS } from "./contracts/generated";
 import {
   ERC20_ABI,
   explorerAddress,
+  explorerTx,
   formatAmount,
   formatUsd,
   getFirstBigInt,
@@ -63,6 +64,10 @@ function toUsdFrom8(value) {
   }
 }
 
+function normalizeAmountInput(value) {
+  return String(value || "").trim().replace(",", ".");
+}
+
 function normalizeBuckets(value) {
   if (!value) return [0n, 0n, 0n, 0n];
   if (Array.isArray(value)) return [value[0] || 0n, value[1] || 0n, value[2] || 0n, value[3] || 0n];
@@ -75,6 +80,7 @@ function App() {
   const chainId = useChainId();
   const publicClient = usePublicClient();
   const { switchChain } = useSwitchChain();
+  const { writeContractAsync } = useWriteContract();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [view, setView] = useState("overview");
@@ -83,6 +89,8 @@ function App() {
   const [amount, setAmount] = useState("");
   const [data, setData] = useState(emptyData());
   const [loading, setLoading] = useState(false);
+  const [writeBusy, setWriteBusy] = useState(false);
+  const [toast, setToast] = useState(null);
   const [refreshNonce, setRefreshNonce] = useState(0);
 
   const isRightChain = chainId === CHAIN_ID;
@@ -103,6 +111,96 @@ function App() {
       return null;
     }
   }
+
+  function showToast(kind, text, hash = null) {
+    setToast({ kind, text, hash });
+    window.clearTimeout(window.__robinToastTimer);
+    window.__robinToastTimer = window.setTimeout(() => setToast(null), 8000);
+  }
+
+  async function waitForTx(hash) {
+    if (!publicClient || !hash) return;
+    await publicClient.waitForTransactionReceipt({ hash });
+    setRefreshNonce((x) => x + 1);
+  }
+
+  async function runDeposit() {
+    if (!address || !publicClient || !selectedToken || !amount) return;
+
+    setWriteBusy(true);
+
+    try {
+      const parsedAmount = parseUnits(normalizeAmountInput(amount), selectedToken.decimals);
+
+      if (parsedAmount <= 0n) {
+        throw new Error("Amount must be greater than zero.");
+      }
+
+      const allowance = await publicClient.readContract({
+        address: selectedToken.address,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [address, ADDRESSES.vault],
+      });
+
+      if (allowance < parsedAmount) {
+        const approveHash = await writeContractAsync({
+          address: selectedToken.address,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [ADDRESSES.vault, parsedAmount],
+        });
+
+        showToast("info", `Approve submitted for ${selectedToken.symbol}`, approveHash);
+        await waitForTx(approveHash);
+      }
+
+      const depositHash = await writeContractAsync({
+        address: ADDRESSES.vault,
+        abi: ABIS.RobinIndexVault,
+        functionName: "deposit",
+        args: [selectedToken.address, parsedAmount],
+      });
+
+      showToast("success", `Deposit submitted: ${selectedToken.symbol}`, depositHash);
+      await waitForTx(depositHash);
+      closeModal();
+    } catch (err) {
+      showToast("error", err?.shortMessage || err?.message || "Deposit failed");
+    } finally {
+      setWriteBusy(false);
+    }
+  }
+
+  async function runWithdraw() {
+    if (!address || !publicClient || !selectedToken || !amount) return;
+
+    setWriteBusy(true);
+
+    try {
+      const parsedAmount = parseUnits(normalizeAmountInput(amount), selectedToken.decimals);
+
+      if (parsedAmount <= 0n) {
+        throw new Error("Amount must be greater than zero.");
+      }
+
+      const withdrawHash = await writeContractAsync({
+        address: ADDRESSES.vault,
+        abi: ABIS.RobinIndexVault,
+        functionName: "withdraw",
+        args: [selectedToken.address, parsedAmount],
+      });
+
+      showToast("success", `Withdraw submitted: ${selectedToken.symbol}`, withdrawHash);
+      await waitForTx(withdrawHash);
+      closeModal();
+    } catch (err) {
+      showToast("error", err?.shortMessage || err?.message || "Withdraw failed");
+    } finally {
+      setWriteBusy(false);
+    }
+  }
+
 
   async function loadVaultData() {
     if (!publicClient) return;
@@ -242,7 +340,7 @@ function App() {
     setRefreshNonce((x) => x + 1);
   }
 
-  const estimateUsd = Number(amount || 0) * (data.prices[selectedToken.symbol] || selectedToken.fallbackPrice);
+  const estimateUsd = Number(normalizeAmountInput(amount) || 0) * (data.prices[selectedToken.symbol] || selectedToken.fallbackPrice);
 
   return (
     <div className="app">
@@ -407,7 +505,23 @@ function App() {
           setAmount={setAmount}
           estimateUsd={estimateUsd}
           closeModal={closeModal}
+          onConfirm={modal === "deposit" ? runDeposit : runWithdraw}
+          writeBusy={writeBusy}
+          isConnected={isConnected}
+          isRightChain={isRightChain}
         />
+      )}
+
+      {toast && (
+        <div className={`toast ${toast.kind}`}>
+          <strong>{toast.kind === "error" ? "Transaction Error" : "Transaction Status"}</strong>
+          <span>{toast.text}</span>
+          {toast.hash && (
+            <a href={explorerTx(EXPLORER, toast.hash)} target="_blank" rel="noreferrer">
+              View transaction <ExternalLink size={13} />
+            </a>
+          )}
+        </div>
       )}
     </div>
   );
@@ -738,7 +852,18 @@ function AdminPanel({ isOperator, focus }) {
   );
 }
 
-function ActionModal({ modal, selectedToken, amount, setAmount, estimateUsd, closeModal }) {
+function ActionModal({
+  modal,
+  selectedToken,
+  amount,
+  setAmount,
+  estimateUsd,
+  closeModal,
+  onConfirm,
+  writeBusy,
+  isConnected,
+  isRightChain,
+}) {
   return (
     <div className="modalWrap">
       <div className="modal">
@@ -762,8 +887,16 @@ function ActionModal({ modal, selectedToken, amount, setAmount, estimateUsd, clo
           <div><span>{modal === "deposit" ? "Expected receipt" : "Expected burn"}</span><strong>Contract preview next</strong></div>
         </div>
 
-        <button className="primaryBtn wide" disabled>
-          Contract write wiring next
+        <button
+          className="primaryBtn wide"
+          disabled={writeBusy || !isConnected || !isRightChain || !amount}
+          onClick={onConfirm}
+        >
+          {writeBusy
+            ? "Confirming..."
+            : modal === "deposit"
+              ? "Approve + Deposit"
+              : "Confirm Withdraw"}
         </button>
 
         <p className="fineprint">
