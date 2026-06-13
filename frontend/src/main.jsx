@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             fontStack: "system",
             overlayBlur: "small",
           })}
-        >
+         locale="en-US">
           <App />
         </RainbowKitProvider>
       </QueryClientProvider>

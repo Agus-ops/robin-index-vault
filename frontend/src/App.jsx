@@ -68,6 +68,14 @@ function normalizeAmountInput(value) {
   return String(value || "").trim().replace(",", ".");
 }
 
+function formatPreviewNumber(value, maxFractionDigits = 6) {
+  if (!Number.isFinite(value) || value <= 0) return "—";
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: maxFractionDigits,
+    minimumFractionDigits: 0,
+  }).format(value);
+}
+
 function normalizeBuckets(value) {
   if (!value) return [0n, 0n, 0n, 0n];
   if (Array.isArray(value)) return [value[0] || 0n, value[1] || 0n, value[2] || 0n, value[3] || 0n];
@@ -348,16 +356,10 @@ function App() {
       <div className="glow glowB" />
 
       <header className="topbar">
-        <div className="brand">
-          <div className="brandIcon">R</div>
-          <div>
-            <strong>Robin Index</strong>
-            <span>Vault Terminal</span>
-          </div>
-        </div>
+        <div className="brand brandBlank" aria-hidden="true"></div>
 
         <div className="topActions">
-          <div className={isRightChain ? "chainOk" : "chainBad"}>
+          <div className={isConnected && isRightChain ? "chainOk" : "chainBad"}>
             <span />
             {isRightChain ? "Robinhood Testnet" : "Wrong Network"}
           </div>
@@ -407,8 +409,8 @@ function App() {
               <a href="https://github.com/Agus-ops/robin-index-vault" target="_blank" rel="noreferrer">
                 GitHub <ExternalLink size={14} />
               </a>
-              <a href="https://github.com/Agus-ops/robin-index-vault/releases/tag/v0.2.0" target="_blank" rel="noreferrer">
-                Release v0.2.0 <ExternalLink size={14} />
+              <a href="https://github.com/Agus-ops/robin-index-vault/releases/tag/v0.3.0" target="_blank" rel="noreferrer">
+                Release v0.3.0 <ExternalLink size={14} />
               </a>
             </nav>
           </aside>
@@ -474,7 +476,7 @@ function App() {
           <>
             <ViewHero
               title="Verified Contracts"
-              subtitle="All core v0.2.0 contracts are verified on Robinhood Chain Testnet explorer."
+              subtitle="All active vault contracts are verified on Robinhood Chain Testnet explorer."
             />
             <div className="singlePanel">
               <ContractsPanel />
@@ -484,7 +486,7 @@ function App() {
 
         {view === "admin" && (
           <>
-            <ViewHero title="Operator Control Room" subtitle="Admin-only tools stay hidden from normal users." />
+            <ViewHero title="Operator Control Room" subtitle="Operator tools remain gated and hidden from normal users." />
             <AdminPanel isOperator={isOperator} focus="admin" />
           </>
         )}
@@ -532,12 +534,8 @@ function Hero({ isRightChain, isConnected, switchChain, paused, loading }) {
     <section className="hero">
       <div>
         <div className="eyebrow">Robinhood Chain Testnet · Chain ID 46630</div>
-        <h1>Robin Index Vault v0.3.0</h1>
-        <p>
-          A premium interface for the verified v0.2.0 ledger-based vault.
-          Deposit testnet stock tokens, receive non-transferable rINDEX,
-          and withdraw the original deposited token.
-        </p>
+        <h1>Robin Index Vault</h1>
+        <p>A premium green terminal for ledger-based testnet stock tokens. Deposit supported assets, receive non-transferable rINDEX receipts, and withdraw the original token from your on-chain vault ledger.</p>
 
         <div className="badges">
           <span><ShieldCheck size={15} /> Verified deployment</span>
@@ -548,16 +546,16 @@ function Hero({ isRightChain, isConnected, switchChain, paused, loading }) {
 
       <div className="heroCard">
         <span>Network status</span>
-        <strong>{paused ? "Paused" : isRightChain ? "Ready" : "Switch required"}</strong>
+        <strong>{isRightChain ? "Network Ready" : "Wrong Network"}</strong>
         <p>
-          {loading
-            ? "Reading on-chain vault state..."
-            : paused
-              ? "Deposits are paused. Withdrawals may remain available."
-              : isRightChain
-                ? "Connected to Robinhood Chain Testnet."
-                : "Switch wallet network before transactions."}
-        </p>
+        {loading
+          ? "Reading on-chain vault state..."
+          : isRightChain
+            ? isConnected
+              ? "Connected to Robinhood Chain Testnet."
+              : "Wallet not connected. Connect wallet to load your vault state."
+            : "Switch wallet network to Robinhood Chain Testnet."}
+      </p>
 
         {!isRightChain && isConnected && (
           <button className="primaryBtn" onClick={() => switchChain?.({ chainId: CHAIN_ID })}>
@@ -603,10 +601,12 @@ function LandingOverview({ go }) {
         <button className="secondaryBtn" onClick={() => go("treasury")}>View Treasury</button>
       </article>
 
-      <article className="landingCard">
-        <span className="cardKicker">Public trust</span>
-        <h2>Verified v0.2.0 deployment</h2>
-        <p>All core contracts are verified, smoke tested, and passed runtime invariant checks.</p>
+      <article className="landingCard wideLanding trustWide">
+        <div>
+          <span className="cardKicker">Public trust</span>
+          <h2>Verified engine, public dApp</h2>
+          <p>Robin Index Vault runs on a verified contract stack with a public green terminal interface. The vault records deposited stock tokens in an on-chain ledger, mints non-transferable rINDEX receipts, and routes protocol fees through transparent treasury buckets.</p>
+        </div>
         <button className="secondaryBtn" onClick={() => go("contracts")}>View Contracts</button>
       </article>
 
@@ -616,6 +616,21 @@ function LandingOverview({ go }) {
           <div><span>Smoke</span><strong>PASS</strong></div>
           <div><span>Invariant</span><strong>65 / 0 / 0</strong></div>
           <div><span>Network</span><strong>46630</strong></div>
+        </div>
+      </article>
+
+      <article className="landingCard wideLanding assetStrip">
+        <div>
+          <span className="cardKicker">Supported assets</span>
+          <h2>Stock-token vault ledger</h2>
+          <p>The vault currently supports TSLA, AMZN, NFLX, PLTR, and AMD testnet stock tokens. Each deposit stays token-specific in the ledger and can be withdrawn back as the original asset.</p>
+        </div>
+        <div className="assetChips">
+          <span>TSLA</span>
+          <span>AMZN</span>
+          <span>NFLX</span>
+          <span>PLTR</span>
+          <span>AMD</span>
         </div>
       </article>
     </section>
@@ -634,6 +649,17 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
           {loading ? <Loader2 className="spin" size={15} /> : "Refresh"}
         </button>
       </div>
+
+      {(!isConnected || !isRightChain) && (
+        <div className="ledgerNotice">
+          <strong>{!isConnected ? "Wallet required" : "Wrong network"}</strong>
+          <span>
+            {!isConnected
+              ? "Connect a wallet to load balances and enable vault actions."
+              : "Switch to Robinhood Chain Testnet to use vault actions."}
+          </span>
+        </div>
+      )}
 
       <div className="assetList">
         {TOKENS.map((token) => {
@@ -664,7 +690,7 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
                   <strong>
                     {isConnected
                       ? `${formatAmount(data.walletBalances[token.symbol] || 0n, token.decimals)} ${token.symbol}`
-                      : "Connect wallet"}
+                      : "—"}
                   </strong>
                 </div>
                 <div>
@@ -708,30 +734,52 @@ function PortfolioPanel({ data, isConnected, loading }) {
     }
   }
 
+  const receiptText = isConnected ? `${formatAmount(data.receiptBalance, 18)} rINDEX` : "Connect wallet";
+  const receiptStatus = !isConnected ? "Wallet required" : data.receiptBalance > 0n ? "Active receipt" : "No receipt yet";
+
   return (
-    <section id="rindex" className="panel metricPanel">
+    <section id="rindex" className="panel metricPanel rindexPanel">
       <div className="sectionHead">
         <div>
           <h2>Your Vault Portfolio</h2>
-          <p>Based on vault ledger and mock oracle values.</p>
+          <p>Ledger-backed position value and non-transferable rINDEX receipt.</p>
         </div>
         <Wallet size={20} />
       </div>
 
-      <div className="bigNumber">
-        {loading ? "Reading..." : isConnected ? formatUsd(displayPortfolioUsd) : "—"}
+      <div className="rindexHeroMetric">
+        <span>Estimated vault value</span>
+        <div className="bigNumber">
+          {loading ? "Reading..." : isConnected ? formatUsd(displayPortfolioUsd) : "—"}
+        </div>
+        <p>Calculated from your vault ledger balances and mock oracle prices.</p>
       </div>
 
-      <div className="rindexBox">
+      <div className="rindexBox rindexReceiptBox">
         <span>rINDEX Balance</span>
-        <strong>
-          {isConnected ? `${formatAmount(data.receiptBalance, 18)} rINDEX` : "Connect wallet"}
-        </strong>
-        <em><Lock size={13} /> Non-transferable receipt</em>
+        <strong>{receiptText}</strong>
+        <em><Lock size={13} /> Account-bound receipt token</em>
+      </div>
+
+      <div className="receiptInfoGrid">
+        <div>
+          <span>Receipt status</span>
+          <strong>{receiptStatus}</strong>
+        </div>
+        <div>
+          <span>Transferability</span>
+          <strong>Locked</strong>
+        </div>
+        <div>
+          <span>Reward model</span>
+          <strong>Fee-funded</strong>
+        </div>
       </div>
 
       <p className="fineprint">
-        Withdraw returns the original deposited token from your ledger balance.
+        rINDEX represents your vault receipt balance only. It is not a tradable stock token,
+        not a yield token, and does not guarantee APY. Withdraw returns the original deposited
+        token from your ledger balance.
       </p>
     </section>
   );
@@ -739,41 +787,87 @@ function PortfolioPanel({ data, isConnected, loading }) {
 
 function TreasuryPanel({ data }) {
   return (
-    <section id="treasury" className="panel">
+    <section id="treasury" className="panel treasuryPanel">
       <div className="sectionHead">
         <div>
           <h2>Treasury & Rewards</h2>
-          <p>Rewards are fee-funded only. No guaranteed yield.</p>
+          <p>Protocol fees are split into transparent buckets. Rewards are fee-funded only.</p>
         </div>
       </div>
 
-      <Bucket label="Protocol Reserve" pct={50} />
-      <Bucket label="User Rewards Pool" pct={30} />
-      <Bucket label="Router Liquidity" pct={15} />
-      <Bucket label="Admin Ops" pct={5} />
+      <div className="treasurySplitGrid">
+        <div>
+          <span>Protocol Reserve</span>
+          <strong>50%</strong>
+          <em>Safety reserve</em>
+        </div>
+        <div>
+          <span>User Rewards Pool</span>
+          <strong>30%</strong>
+          <em>Fee-funded rewards</em>
+        </div>
+        <div>
+          <span>Router Liquidity</span>
+          <strong>15%</strong>
+          <em>Routing support</em>
+        </div>
+        <div>
+          <span>Admin Ops</span>
+          <strong>5%</strong>
+          <em>Operations bucket</em>
+        </div>
+      </div>
 
-      <div className="liveList">
+      <div className="bucketBars">
+        <Bucket label="Protocol Reserve" pct={50} />
+        <Bucket label="User Rewards Pool" pct={30} />
+        <Bucket label="Router Liquidity" pct={15} />
+        <Bucket label="Admin Ops" pct={5} />
+      </div>
+
+      <div className="sectionHead treasuryTokenHead">
+        <div>
+          <h2>Live Token Buckets</h2>
+          <p>Per-asset fee state from the verified treasury contract.</p>
+        </div>
+      </div>
+
+      <div className="treasuryTokenGrid">
         {TOKENS.map((token) => {
           const buckets = data.buckets[token.symbol] || [0n, 0n, 0n, 0n];
 
           return (
-            <div key={token.symbol}>
-              <strong>{token.symbol}</strong>
-              <span>Pending {formatAmount(data.pendingFees[token.symbol] || 0n, token.decimals, 6)}</span>
-              <span>Total deposits {formatAmount(data.totalDeposits[token.symbol] || 0n, token.decimals, 4)}</span>
-              <small>
-                R {formatAmount(buckets[0], token.decimals, 6)} ·
-                W {formatAmount(buckets[1], token.decimals, 6)} ·
-                L {formatAmount(buckets[2], token.decimals, 6)} ·
-                O {formatAmount(buckets[3], token.decimals, 6)}
-              </small>
-            </div>
+            <article className="treasuryTokenCard" key={token.symbol}>
+              <div className="treasuryTokenTop">
+                <strong>{token.symbol}</strong>
+                <span>{token.name}</span>
+              </div>
+
+              <div className="treasuryMetricRows">
+                <div>
+                  <span>Pending fees</span>
+                  <strong>{formatAmount(data.pendingFees[token.symbol] || 0n, token.decimals, 6)} {token.symbol}</strong>
+                </div>
+                <div>
+                  <span>Total deposits</span>
+                  <strong>{formatAmount(data.totalDeposits[token.symbol] || 0n, token.decimals, 4)} {token.symbol}</strong>
+                </div>
+              </div>
+
+              <div className="treasuryBucketMini">
+                <div><span>Reserve</span><strong>{formatAmount(buckets[0], token.decimals, 6)}</strong></div>
+                <div><span>Rewards</span><strong>{formatAmount(buckets[1], token.decimals, 6)}</strong></div>
+                <div><span>Router</span><strong>{formatAmount(buckets[2], token.decimals, 6)}</strong></div>
+                <div><span>Operator</span><strong>{formatAmount(buckets[3], token.decimals, 6)}</strong></div>
+              </div>
+            </article>
           );
         })}
       </div>
 
       <p className="fineprint">
-        Bucket order: Reserve · Rewards · Router · Operator.
+        Rewards are distributed only from collected protocol fees. This page does not imply APY,
+        APR, guaranteed yield, or real stock ownership.
       </p>
     </section>
   );
@@ -781,11 +875,11 @@ function TreasuryPanel({ data }) {
 
 function ContractsPanel() {
   return (
-    <section id="contracts" className="panel">
+    <section id="contracts" className="panel contractsPanel">
       <div className="sectionHead">
         <div>
           <h2>Verified Contracts</h2>
-          <p>All core contracts verified on explorer.</p>
+          <p>Active contract stack verified on explorer.</p>
         </div>
         <ShieldCheck size={20} />
       </div>
@@ -826,7 +920,7 @@ function AdminPanel({ isOperator, focus }) {
       <div className="sectionHead">
         <div>
           <h2>{focus === "oracle" ? "Oracle Manager" : "Operator Control Room"}</h2>
-          <p>Admin-only panel. Hidden for normal users.</p>
+          <p>Operator-only panel. Write controls are planned for the next wiring pass.</p>
         </div>
         <span className="dangerPill">Admin</span>
       </div>
@@ -834,18 +928,18 @@ function AdminPanel({ isOperator, focus }) {
       <div className="adminGrid">
         <div>
           <strong>Oracle Manager</strong>
-          <p>Update token prices from verified oracle contract.</p>
-          <button disabled>Write wiring next</button>
+          <p>Oracle price controls for supported vault assets.</p>
+          <button disabled>Coming soon</button>
         </div>
         <div>
           <strong>Treasury Sweep</strong>
-          <p>Sweep pending protocol fees into treasury buckets.</p>
-          <button disabled>Write wiring next</button>
+          <p>Move pending protocol fees into transparent treasury buckets.</p>
+          <button disabled>Coming soon</button>
         </div>
         <div>
           <strong>Emergency</strong>
-          <p>Pause controls for testnet safety only.</p>
-          <button disabled>Pause wiring next</button>
+          <p>Emergency controls for testnet safety operations.</p>
+          <button disabled>Coming soon</button>
         </div>
       </div>
     </section>
@@ -864,13 +958,41 @@ function ActionModal({
   isConnected,
   isRightChain,
 }) {
+  const normalizedAmount = normalizeAmountInput(amount);
+  const inputAmount = Number(normalizedAmount);
+  const safeAmount = Number.isFinite(inputAmount) && inputAmount > 0 ? inputAmount : 0;
+
+  // UI estimate only. Contract remains source of truth.
+  // Deposit fee: 50 bps / 0.5%
+  // Withdraw normal fee: 20 bps / 0.2%
+  // Early withdraw may be higher in contract preview.
+  const depositFeeRate = 0.005;
+  const withdrawFeeRate = 0.002;
+  const activeFeeRate = modal === "deposit" ? depositFeeRate : withdrawFeeRate;
+
+  const protocolFeeAmount = safeAmount * activeFeeRate;
+  const netReceiptUsd = estimateUsd * (1 - depositFeeRate);
+  const netReceiveAmount = Math.max(safeAmount - protocolFeeAmount, 0);
+
+  const protocolFeeText =
+    safeAmount <= 0
+      ? "—"
+      : `≈ ${formatPreviewNumber(protocolFeeAmount)} ${selectedToken.symbol}`;
+
+  const expectedText =
+    safeAmount <= 0
+      ? "—"
+      : modal === "deposit"
+        ? `≈ ${formatPreviewNumber(netReceiptUsd, 4)} rINDEX`
+        : `≈ ${formatPreviewNumber(netReceiveAmount)} ${selectedToken.symbol}`;
+
   return (
     <div className="modalWrap">
       <div className="modal">
         <div className="modalHead">
           <div>
             <h3>{modal === "deposit" ? "Deposit" : "Withdraw"} {selectedToken.symbol}</h3>
-            <p>This is a testnet stock-token vault MVP.</p>
+            <p>{modal === "deposit" ? "Deposit stock tokens into the vault ledger." : "Withdraw the original token from your vault ledger."}</p>
           </div>
           <button className="iconBtn" onClick={closeModal}><X size={18} /></button>
         </div>
@@ -883,8 +1005,8 @@ function ActionModal({
         <div className="breakdown">
           <div><span>Selected asset</span><strong>{selectedToken.symbol}</strong></div>
           <div><span>Estimated USD value</span><strong>{formatUsd(estimateUsd)}</strong></div>
-          <div><span>Protocol fee</span><strong>Contract preview next</strong></div>
-          <div><span>{modal === "deposit" ? "Expected receipt" : "Expected burn"}</span><strong>Contract preview next</strong></div>
+          <div><span>{modal === "deposit" ? "Protocol fee" : "Withdrawal fee"}</span><strong>{protocolFeeText}</strong></div>
+          <div><span>{modal === "deposit" ? "Expected receipt" : "Expected receive"}</span><strong>{expectedText}</strong></div>
         </div>
 
         <button
@@ -900,7 +1022,7 @@ function ActionModal({
         </button>
 
         <p className="fineprint">
-          rINDEX is non-transferable. Rewards are fee-funded only. No APY, no guaranteed yield.
+          Estimates are UI previews. Final fee and receipt/burn are enforced by the verified contract. No APY, no guaranteed yield.
         </p>
       </div>
     </div>
