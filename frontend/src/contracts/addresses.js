@@ -3,11 +3,11 @@ export const CHAIN_ID = 46630;
 export const EXPLORER = "https://explorer.testnet.chain.robinhood.com";
 
 export const ADDRESSES = {
-  oracle: "0xFB22dF75fFD1E89b23f9b9727880a22C039350a9",
-  receipt: "0x032F80b841c1677ae188d34004a8F6e5F4f576B4",
-  treasury: "0xf5579396bFaEd22a14fF43d09eD490ae78784211",
-  vault: "0x1f51A1c104115fD24D3389428BC7Dbe370d3466b",
-  rewardDistributor: "0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15",
+  oracle: "0x09FcC88e4d70DE7e0feA45D422E01D2b6922E3Aa",
+  receipt: "0xeBA481658622F6b3893D57F58530AfA4F443bEdE",
+  treasury: "0x94d6BF3eb29D15642eE10ad5d1164749eB880961",
+  vault: "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7",
+  rewardDistributor: "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f",
 };
 
 export const OPERATORS = [

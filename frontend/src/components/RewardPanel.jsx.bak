@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
   useAccount,
   useReadContract,
@@ -6,12 +6,12 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { useQueryClient } from "@tanstack/react-query";
 import { formatUnits, parseAbi } from "viem";
 
 const TREASURY = "0x94d6BF3eb29D15642eE10ad5d1164749eB880961";
 const REWARD_DISTRIBUTOR = "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 const BUCKET_REWARDS = 1;
 
 const TOKENS = [
@@ -47,6 +47,7 @@ const erc20Abi = parseAbi([
 
 function fmt(value, decimals = 18, maxDecimals = 8) {
   if (value === undefined || value === null) return "—";
+
   try {
     const out = formatUnits(value, decimals);
     const [whole, frac = ""] = out.split(".");
@@ -69,35 +70,107 @@ function isPositive(value) {
 export default function RewardPanel() {
   const { address, isConnected } = useAccount();
   const viewer = address || ZERO_ADDRESS;
-  const queryClient = useQueryClient();
 
-  const { data: currentWeek, isLoading: weekLoading } = useReadContract({
+  const {
+    data: currentWeek,
+    isLoading: weekLoading,
+    refetch: refetchWeek,
+  } = useReadContract({
     address: REWARD_DISTRIBUTOR,
     abi: rewardAbi,
     functionName: "currentWeek",
+    query: { refetchInterval: 60_000 },
   });
 
   const contracts = useMemo(() => {
     if (currentWeek === undefined) return [];
+
     return TOKENS.flatMap((token) => [
-      { address: TREASURY, abi: treasuryAbi, functionName: "bucketBalance", args: [token.address, BUCKET_REWARDS] },
-      { address: TREASURY, abi: treasuryAbi, functionName: "distributionThreshold", args: [token.address] },
-      { address: TREASURY, abi: treasuryAbi, functionName: "canDistribute", args: [token.address] },
-      { address: token.address, abi: erc20Abi, functionName: "balanceOf", args: [REWARD_DISTRIBUTOR] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "tokenConfig", args: [token.address] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "weekFunded", args: [token.address, currentWeek] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "weekClaimedTotal", args: [token.address, currentWeek] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "tokenTotalFunded", args: [token.address] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "tokenTotalClaimed", args: [token.address] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "allocation", args: [viewer, token.address, currentWeek] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "claimed", args: [viewer, token.address, currentWeek] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "claimable", args: [viewer, token.address, currentWeek] },
+      {
+        address: TREASURY,
+        abi: treasuryAbi,
+        functionName: "bucketBalance",
+        args: [token.address, BUCKET_REWARDS],
+      },
+      {
+        address: TREASURY,
+        abi: treasuryAbi,
+        functionName: "distributionThreshold",
+        args: [token.address],
+      },
+      {
+        address: TREASURY,
+        abi: treasuryAbi,
+        functionName: "canDistribute",
+        args: [token.address],
+      },
+      {
+        address: token.address,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [REWARD_DISTRIBUTOR],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "tokenConfig",
+        args: [token.address],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "weekFunded",
+        args: [token.address, currentWeek],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "weekClaimedTotal",
+        args: [token.address, currentWeek],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "tokenTotalFunded",
+        args: [token.address],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "tokenTotalClaimed",
+        args: [token.address],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "allocation",
+        args: [viewer, token.address, currentWeek],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "claimed",
+        args: [viewer, token.address, currentWeek],
+      },
+      {
+        address: REWARD_DISTRIBUTOR,
+        abi: rewardAbi,
+        functionName: "claimable",
+        args: [viewer, token.address, currentWeek],
+      },
     ]);
   }, [currentWeek, viewer]);
 
-  const { data: reads, isLoading } = useReadContracts({
+  const {
+    data: reads,
+    isLoading,
+    refetch,
+  } = useReadContracts({
     contracts,
-    query: { enabled: contracts.length > 0 },
+    query: {
+      enabled: contracts.length > 0,
+      refetchInterval: 60_000,
+    },
   });
 
   const { writeContract, data: txHash, isPending, error } = useWriteContract();
@@ -107,23 +180,15 @@ export default function RewardPanel() {
     query: { enabled: Boolean(txHash) },
   });
 
-  // Auto-refresh setelah claim confirmed
-  useEffect(() => {
-    if (isSuccess) {
-      const t = setTimeout(() => {
-        queryClient.invalidateQueries();
-      }, 2000);
-      return () => clearTimeout(t);
-    }
-  }, [isSuccess, queryClient]);
-
   const rows = useMemo(() => {
     if (!reads || reads.length === 0) return [];
+
     return TOKENS.map((token, i) => {
       const base = i * 12;
       const tokenConfig = reads[base + 4]?.result;
       const enabled = Array.isArray(tokenConfig) ? tokenConfig[0] : false;
       const cap = Array.isArray(tokenConfig) ? tokenConfig[1] : 0n;
+
       return {
         ...token,
         treasuryRewards: reads[base]?.result,
@@ -145,6 +210,7 @@ export default function RewardPanel() {
 
   function onClaim(token) {
     if (currentWeek === undefined) return;
+
     writeContract({
       address: REWARD_DISTRIBUTOR,
       abi: rewardAbi,
@@ -153,12 +219,8 @@ export default function RewardPanel() {
     });
   }
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
   async function refreshAll() {
-    setIsRefreshing(true);
-    await queryClient.invalidateQueries();
-    setTimeout(() => setIsRefreshing(false), 1500);
+    await Promise.allSettled([refetchWeek(), refetch()]);
   }
 
   return (
@@ -171,8 +233,9 @@ export default function RewardPanel() {
             Fee-funded reward status from the treasury rewards bucket and RewardDistributor.
           </p>
         </div>
-        <button className="rewardRefreshButton" type="button" onClick={refreshAll} disabled={isRefreshing}>
-          {isRefreshing ? "Refreshing…" : "Refresh"}
+
+        <button className="rewardRefreshButton" type="button" onClick={refreshAll}>
+          Refresh
         </button>
       </div>
 
@@ -197,6 +260,7 @@ export default function RewardPanel() {
         <div className="rewardAssetGrid">
           {rows.map((row) => {
             const canClaim = isConnected && isPositive(row.claimable) && !isPending && !isConfirming;
+
             return (
               <article className="rewardAssetCard" key={row.symbol}>
                 <div className="rewardAssetTop">
@@ -204,6 +268,7 @@ export default function RewardPanel() {
                     <strong className="rewardSymbol">{row.symbol}</strong>
                     <span className="rewardSubtext">Reward asset</span>
                   </div>
+
                   <div className="rewardBadgeRow">
                     <span className={row.enabled ? "rewardBadge rewardBadgeOk" : "rewardBadge"}>
                       {row.enabled ? "Enabled" : "Inactive"}
@@ -220,6 +285,14 @@ export default function RewardPanel() {
                     <strong>{fmt(row.treasuryRewards, row.decimals)}</strong>
                   </div>
                   <div className="rewardMetric">
+                    <span>Threshold</span>
+                    <strong>{fmt(row.threshold, row.decimals)}</strong>
+                  </div>
+                  <div className="rewardMetric">
+                    <span>Reward balance</span>
+                    <strong>{fmt(row.rewardBalance, row.decimals)}</strong>
+                  </div>
+                  <div className="rewardMetric">
                     <span>Weekly cap</span>
                     <strong>{fmt(row.cap, row.decimals)}</strong>
                   </div>
@@ -231,6 +304,14 @@ export default function RewardPanel() {
                     <span>Week claimed</span>
                     <strong>{fmt(row.weekClaimed, row.decimals)}</strong>
                   </div>
+                  <div className="rewardMetric">
+                    <span>Total funded</span>
+                    <strong>{fmt(row.totalFunded, row.decimals)}</strong>
+                  </div>
+                  <div className="rewardMetric">
+                    <span>Total claimed</span>
+                    <strong>{fmt(row.totalClaimed, row.decimals)}</strong>
+                  </div>
                 </div>
 
                 <div className="rewardClaimRow">
@@ -238,6 +319,7 @@ export default function RewardPanel() {
                     <span>Your claimable</span>
                     <strong>{fmt(row.claimable, row.decimals)}</strong>
                   </div>
+
                   <button
                     className="rewardClaimButton"
                     type="button"
@@ -253,8 +335,10 @@ export default function RewardPanel() {
         </div>
       )}
 
-      {isSuccess && <p className="rewardSuccess">✓ Claim confirmed. Data refreshed.</p>}
+      {isSuccess && <p className="rewardSuccess">Claim transaction confirmed.</p>}
       {error && <p className="rewardError">{error.shortMessage || error.message}</p>}
+
+      
     </section>
   );
 }

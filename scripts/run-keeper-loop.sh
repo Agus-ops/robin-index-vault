@@ -9,6 +9,7 @@ while true; do
   echo "========================================"
 
   EXEC=1 npm run oracle-keeper || true
+  EXEC=1 npm run reward-keeper || true
 
   echo
   echo "[KEEPER] sleeping 4 hours..."

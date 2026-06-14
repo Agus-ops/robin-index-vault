@@ -340,3 +340,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Mobile fix */
+@media (max-width: 768px) {
+  .rewardAssetGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .rewardMetricGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

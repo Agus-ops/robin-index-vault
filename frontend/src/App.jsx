@@ -461,14 +461,12 @@ function App() {
       <div className="glow glowB" />
 
       <header className="topbar">
-        <div className="brand brandBlank" aria-hidden="true"></div>
+        <div className={isConnected && isRightChain ? "chainOk" : "chainBad"}>
+          <span />
+          {isRightChain ? "Robinhood Testnet" : "Wrong Network"}
+        </div>
 
         <div className="topActions">
-          <div className={isConnected && isRightChain ? "chainOk" : "chainBad"}>
-            <span />
-            {isRightChain ? "Robinhood Testnet" : "Wrong Network"}
-          </div>
-
           <ConnectButton />
 
           <button className="iconBtn" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
@@ -649,7 +647,7 @@ function Hero({ isRightChain, isConnected, switchChain, paused, loading }) {
       <div>
         <div className="eyebrow">Robinhood Chain Testnet · Chain ID 46630</div>
         <h1>Robin Index Vault</h1>
-        <p>A premium green terminal for ledger-based testnet stock tokens. Deposit supported assets, receive non-transferable rINDEX receipts, and withdraw the original token from your on-chain vault ledger.</p>
+        <p>Deposit testnet stock tokens into a verified on-chain vault, receive non-transferable rINDEX receipts, and earn fee-funded protocol rewards. No fixed APY. No minting. Full on-chain transparency.</p>
 
         <div className="badges">
           <span><ShieldCheck size={15} /> Verified deployment</span>
@@ -709,10 +707,17 @@ function LandingOverview({ go }) {
       </article>
 
       <article className="landingCard">
-        <span className="cardKicker">Protocol fees</span>
-        <h2>Treasury buckets</h2>
+        <span className="cardKicker">Protocol treasury</span>
+        <h2>Protocol Treasury</h2>
         <p>Fees are split into reserve, rewards, router liquidity, and operator buckets. Rewards are fee-funded only.</p>
         <button className="secondaryBtn" onClick={() => go("treasury")}>View Treasury</button>
+      </article>
+
+      <article className="landingCard halfLanding">
+        <span className="cardKicker">Fee rewards</span>
+        <h2>Claim Rewards</h2>
+        <p>Protocol fee rewards distributed weekly. What the vault collects, users share — no inflation, no subsidy.</p>
+        <button className="secondaryBtn" onClick={() => go("treasury")}>View Rewards</button>
       </article>
 
       <article className="landingCard wideLanding trustWide">
@@ -724,7 +729,7 @@ function LandingOverview({ go }) {
         <button className="secondaryBtn" onClick={() => go("contracts")}>View Contracts</button>
       </article>
 
-      <article className="landingCard wideLanding">
+      <article className="landingCard halfLanding">
         <div className="miniStats">
           <div><span>Verified</span><strong>5 / 5</strong></div>
           <div><span>Smoke</span><strong>PASS</strong></div>
