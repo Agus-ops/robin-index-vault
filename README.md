@@ -1,202 +1,84 @@
-Robin Index Vault
+# Robin Index Vault
 
-Robin Index Vault is a testnet stock-token vault demo on Robinhood Chain Testnet.
+Testnet stock-token index vault on Robinhood Chain Testnet (Chain ID 46630).
 
-The dApp demonstrates ledger-based deposits for supported testnet assets, non-transferable rINDEX receipt accounting, transparent treasury buckets, operator fee sweeping, and keeper-managed mock oracle updates.
-
-Live dApp:
-
-https://robin-index-vault.vercel.app
-
-Repository:
-
-https://github.com/Agus-ops/robin-index-vault
+**Live dApp:** https://robin-index-vault.vercel.app
+**Repo:** https://github.com/Agus-ops/robin-index-vault
 
 ---
 
-Status
+## Contracts
 
-Implemented:
-
-- Multi-token vault ledger
-- TSLA, AMZN, NFLX, PLTR, AMD testnet stock-token support
-- USDG settlement-style test token support
-- Non-transferable rINDEX receipt token
-- Deposit and withdrawal flow
-- Treasury bucket accounting
-- Manual per-token protocol fee sweep
-- Keeper-managed mock oracle updates
-- Keeper-managed pending fee sweep checks
-- Operator Control Room
-- Oracle Manager
-- Contract status dashboard
-- Mobile-friendly green terminal UI
-- Lightweight frontend auto-refresh for keeper-updated state
-
-Deferred:
-
-- Emergency pause UI
-- Treasury withdrawal UI
-- Owner/operator management UI
-- Public bridge functionality
-- Real-time market oracle claims
+| Module | Address |
+|--------|---------|
+| MockStockOracle | 0x09FcC88e4d70DE7e0feA45D422E01D2b6922E3Aa |
+| ReceiptToken (rINDEX) | 0xeBA481658622F6b3893D57F58530AfA4F443bEdE |
+| FeeTreasury | 0x94d6BF3eb29D15642eE10ad5d1164749eB880961 |
+| RobinIndexVault | 0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7 |
+| RewardDistributor | 0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f |
 
 ---
 
-Core Model
+## Implemented
 
-Robin Index Vault uses a token-specific vault ledger.
+- Multi-token vault ledger (TSLA, AMZN, NFLX, PLTR, AMD, USDG)
+- Non-transferable rINDEX receipt token (account-bound, vaultLocked)
+- Deposit and withdrawal (ledger-based, no oracle dependency on withdraw)
+- Fee treasury with automatic bucket split (50/30/15/5)
+- Fee-funded reward distributor with weekly allocation and claim
+- RewardPanel with per-token claimable display and Claim button
+- Auto-refresh after claim confirmation
+- Keeper-managed oracle updates via Finnhub API
+- Keeper-managed fee sweep, reward funding, and weekly cycle
+- Operator Control Room, Oracle Manager, Verified Contracts dashboard
+- Mobile-optimized green terminal UI
 
-Deposits remain asset-specific. A TSLA deposit is tracked as TSLA, an AMZN deposit is tracked as AMZN, and so on. Withdrawals return the original deposited token from the user’s vault ledger balance.
+## Deferred
 
-Supported assets:
-
-- TSLA testnet stock token
-- AMZN testnet stock token
-- NFLX testnet stock token
-- PLTR testnet stock token
-- AMD testnet stock token
-- USDG settlement-style test token
-
----
-
-rINDEX Receipt
-
-rINDEX is a non-transferable receipt token used for vault accounting.
-
-It is not designed as a tradable asset, yield token, stock token, or claim on real-world equities.
-
-rINDEX behavior:
-
-- Minted when supported assets are deposited
-- Burned or adjusted during withdrawals
-- Represents account-bound vault receipt accounting
-- Cannot be freely transferred
-- Does not imply APY, APR, yield, or guaranteed rewards
+- StockRouter (internal swap/rebalance)
+- Bridge to Sepolia
+- Merkle Distributor v2
+- Daily check-in UI
+- Leaderboard / soft reward system
+- USDG as active reward token
 
 ---
 
-Treasury Buckets
+## Treasury Buckets
 
-Protocol fees are routed into transparent treasury buckets.
+| Bucket | Split |
+|--------|-------|
+| Protocol Reserve | 50% |
+| User Rewards Pool | 30% |
+| Router Liquidity | 15% |
+| Admin Ops | 5% |
 
-Current bucket split:
-
-- Protocol Reserve: 50%
-- User Rewards Pool: 30%
-- Router Liquidity: 15%
-- Admin Ops: 5%
-
-Rewards are fee-funded only. The system does not claim guaranteed rewards, APY, APR, or investment return.
+Rewards are fee-funded only. No minting, no fixed APY, no subsidy.
 
 ---
 
-Oracle Model
+## Keeper
 
-Robin Index Vault uses mock testnet oracle prices for vault accounting.
+Runs in tmux session `robin-keeper`. Handles oracle updates, fee sweeps, and weekly reward funding every 4 hours.
 
-Oracle values are used for:
-
-- Estimated vault value
-- rINDEX accounting display
-- Deposit and withdrawal estimates
-- Treasury and portfolio valuation
-
-The oracle is not a real-time trading oracle and should not be treated as live market infrastructure.
+    tmux new -s robin-keeper
+    ./scripts/run-keeper-loop.sh
 
 ---
 
-Keeper Automation
+## Release
 
-Robin Index Vault includes an operator-side keeper for testnet maintenance.
+**v0.5.1** — Mobile UI Polish & Reward Panel Fix
 
-The keeper handles:
-
-- Periodic mock stock oracle updates using stock reference prices
-- Automatic protocol fee sweep checks
-- Treasury bucket fee routing
-- Price-change guard enforcement
-
-The keeper is designed for slow-cadence testnet accounting, not high-frequency market updates.
-
-Safety model:
-
-- Dry-run by default
-- "EXEC=1" required before transactions are submitted
-- Default price movement guard is 10%
-- "FORCE=1" reserved for reviewed first-sync or recovery operations
-- Failed API reads are skipped
-- Invalid or zero prices are skipped
-- Emergency controls remain manual admin actions
-
-Commands:
-
-npm run oracle-keeper
-EXEC=1 npm run oracle-keeper
-FORCE=1 EXEC=1 npm run oracle-keeper
-./scripts/run-keeper-loop.sh
-
-Never commit local environment files, private keys, API keys, or wallet secrets.
+- Reward Refresh button fixed (invalidateQueries)
+- Auto-refresh after claim
+- Mobile: summary 3-col, bucket 2-col, admin 3-col
+- backdrop-filter disabled on mobile (performance)
+- Homepage hero updated, Claim Rewards card added
+- Network badge moved to topbar left
 
 ---
 
-Fee Sweep Automation
+## Safety Notice
 
-The keeper can sweep pending protocol fees from the vault into treasury buckets.
-
-This action only moves accumulated protocol fees already recorded by the vault. It does not withdraw user ledger balances and does not alter user ownership of deposited assets.
-
-Manual sweep remains available in the Operator Control Room as a fallback.
-
----
-
-Frontend Behavior
-
-The frontend reads live contract state from Robinhood Chain Testnet.
-
-Main views:
-
-- Vault Ledger
-- rINDEX Balance
-- Treasury & Rewards
-- Operator Control Room
-- Oracle Manager
-- Contracts
-
-The UI includes lightweight auto-refresh so keeper-updated oracle values and fee sweep state can appear without requiring a full page reload.
-
-Deposit and withdrawal modals use responsive UI estimates. Final fee, mint, burn, and withdrawal values are enforced by the verified smart contracts.
-
----
-
-Safety Notice
-
-Robin Index Vault is a testnet builder demo.
-
-It does not provide:
-
-- Real stock ownership
-- Real-world asset redemption
-- Investment yield
-- Guaranteed rewards
-- Guaranteed APY or APR
-- Real-time trading prices
-- Custodial financial service
-
-All values shown in the UI are for testnet vault accounting and demonstration purposes.
-
----
-
-Suggested Release
-
-Current suggested release label:
-
-v0.4.0 — Keeper Automation
-
-Release scope:
-
-- Operator-side oracle keeper
-- Protocol fee sweep automation
-- Keeper-aware frontend wording
-- 60-second frontend state refresh
-- Public-safe automation documentation
+Testnet demo only. No real stock ownership, no investment yield, no guaranteed rewards.
