@@ -36,15 +36,20 @@
     "check:log": "tail -120 /tmp/riv-check.log",
     "withdraw:smoke": "node scripts/withdraw-smoke.cjs",
     "contracts:audit": "node scripts/contracts-audit.cjs",
-    "reward-keeper": "node scripts/reward-keeper.js"
+    "reward-keeper": "node scripts/reward-keeper.js",
+    "auto-allocate": "node scripts/auto-allocate.js",
+    "daily-tracker": "node scripts/daily-checkin-tracker.mjs",
+    "points-tracker": "node scripts/points-tracker.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.1",
     "dotenv": "^17.4.2",
-    "ethers": "^6.16.0"
+    "ethers": "^6.16.0",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "solc": "^0.8.34"

@@ -9,8 +9,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { formatUnits, parseAbi } from "viem";
 
-const TREASURY = "0x94d6BF3eb29D15642eE10ad5d1164749eB880961";
-const REWARD_DISTRIBUTOR = "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f";
+const TREASURY = "0x05FbC935652605B697522B3f0bd4c14FfBAb8209";
+const REWARD_DISTRIBUTOR = "0xf559F8511022bBb63137523356d19ec4aCBadd53";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const BUCKET_REWARDS = 1;
 

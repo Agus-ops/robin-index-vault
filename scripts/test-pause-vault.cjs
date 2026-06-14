@@ -7,7 +7,7 @@ const PK = process.env.PRIVATE_KEY;
 const provider = new ethers.JsonRpcProvider(RPC);
 const wallet = new ethers.Wallet(PK, provider);
 
-const VAULT = "0x1f51A1c104115fD24D3389428BC7Dbe370d3466b";
+const VAULT = "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7";
 
 const abi = [
   "function paused() view returns (bool)",

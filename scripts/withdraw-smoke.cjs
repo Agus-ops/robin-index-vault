@@ -26,7 +26,7 @@ const parseUnits = (v, d) =>
 const formatUnits = (v, d) =>
   isV6 ? ethers.formatUnits(v, d) : ethers.utils.formatUnits(v, d);
 
-const VAULT = "0x1f51A1c104115fD24D3389428BC7Dbe370d3466b";
+const VAULT = "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7";
 const RECEIPT = "0x032F80b841c1677ae188d34004a8F6e5F4f576B4";
 
 const TOKENS = {

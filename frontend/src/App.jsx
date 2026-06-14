@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useRef} from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { formatUnits, parseUnits } from "viem";
-import { useAccount, useChainId, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
+import { formatUnits, parseUnits, parseAbi } from "viem";
+import { useAccount, useChainId, usePublicClient, useSwitchChain, useWriteContract, useReadContract, useWaitForTransactionReceipt } from "wagmi";
 import {
   CheckCircle2,
   Database,
@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { ADDRESSES, CHAIN_ID, EXPLORER, OPERATORS } from "./contracts/addresses";
+import { supabase } from "./lib/supabase";
 import { TOKENS } from "./contracts/tokens";
 import { ABIS } from "./contracts/generated";
 import {
@@ -31,7 +32,7 @@ import RewardPanel from "./components/RewardPanel";
 const USER_VIEWS = [
   ["overview", "Dashboard Overview"],
   ["ledger", "Vault Ledger"],
-  ["rindex", "rINDEX Balance"],
+  ["rindex", "Portfolio & Leaderboard"],
   ["treasury", "Treasury & Rewards"],
   ["contracts", "Verified Contracts"],
 ];
@@ -554,11 +555,12 @@ function App() {
         {view === "rindex" && (
           <>
             <ViewHero
-              title="rINDEX Balance"
-              subtitle="Your non-transferable receipt token for ledger-based vault deposits."
+              title="Portfolio & Leaderboard"
+              subtitle="Your vault portfolio, rINDEX receipt, and protocol leaderboard."
             />
             <div className="singlePanel">
               <PortfolioPanel data={data} isConnected={isConnected} loading={loading} />
+              <Leaderboard />
             </div>
           </>
         )}
@@ -689,6 +691,47 @@ function ViewHero({ title, subtitle }) {
   );
 }
 
+
+function LeaderboardPreview({ go }) {
+  const [top, setTop] = useState([]);
+
+  useEffect(() => {
+    supabase
+      .from("leaderboard")
+      .select("wallet, total")
+      .order("total", { ascending: false })
+      .limit(3)
+      .then(({ data }) => {
+        setTop((data || []).map((r) => ({ addr: r.wallet, total: r.total })));
+      });
+  }, []);
+
+  function short(addr) {
+    return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  }
+
+  return (
+    <article className="landingCard halfLanding leaderboardPreviewCard">
+      <span className="cardKicker">Leaderboard</span>
+      <h2>Top Rankings</h2>
+      {top.length === 0 ? (
+        <p style={{ color: "rgba(230,255,239,.50)", fontSize: "13px" }}>No activity yet — be the first!</p>
+      ) : (
+        <div className="leaderboardPreviewList">
+          {top.map((e, i) => (
+            <div className="leaderboardPreviewRow" key={e.addr}>
+              <span className="leaderboardPreviewRank">#{i + 1}</span>
+              <span className="leaderboardPreviewAddr">{short(e.addr)}</span>
+              <span className="leaderboardPreviewPts">{e.total} pts</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <button className="secondaryBtn" style={{ marginTop: "auto" }} onClick={() => go("rindex")}>View Rankings</button>
+    </article>
+  );
+}
+
 function LandingOverview({ go }) {
   return (
     <section className="landingGrid">
@@ -720,6 +763,8 @@ function LandingOverview({ go }) {
         <button className="secondaryBtn" onClick={() => go("treasury")}>View Rewards</button>
       </article>
 
+      <LeaderboardPreview go={go} />
+
       <article className="landingCard wideLanding trustWide">
         <div>
           <span className="cardKicker">Public trust</span>
@@ -727,10 +772,7 @@ function LandingOverview({ go }) {
           <p>Robin Index Vault runs on a verified contract stack with a public green terminal interface. The vault records deposited stock tokens in an on-chain ledger, mints non-transferable rINDEX receipts, and routes protocol fees through transparent treasury buckets.</p>
         </div>
         <button className="secondaryBtn" onClick={() => go("contracts")}>View Contracts</button>
-      </article>
-
-      <article className="landingCard halfLanding">
-        <div className="miniStats">
+        <div className="miniStats" style={{ marginTop: "14px" }}>
           <div><span>Verified</span><strong>5 / 5</strong></div>
           <div><span>Smoke</span><strong>PASS</strong></div>
           <div><span>Invariant</span><strong>PASS</strong></div>
@@ -756,6 +798,104 @@ function LandingOverview({ go }) {
   );
 }
 
+
+const VAULT_CHECKIN_ABI = parseAbi([
+  "function dailyRebalanceCheck(string strategy) external",
+  "function lastRebalanceAt(address user) view returns (uint256)",
+]);
+
+function DailyCheckIn({ isConnected, isRightChain }) {
+  const { address } = useAccount();
+  const [now, setNow] = useState(Math.floor(Date.now() / 1000));
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const { data: lastAt, refetch: refetchLast } = useReadContract({
+    address: ADDRESSES.vault,
+    abi: VAULT_CHECKIN_ABI,
+    functionName: "lastRebalanceAt",
+    args: [address || "0x0000000000000000000000000000000000000000"],
+    query: { enabled: Boolean(address) },
+  });
+
+  const { writeContract, data: txHash, isPending, error: writeError, reset } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: txHash,
+    query: { enabled: Boolean(txHash) },
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      refetchLast();
+      reset();
+    }
+  }, [isSuccess]);
+
+  const lastTs = lastAt ? Number(lastAt) : 0;
+  const cooldownEnd = lastTs + 86400;
+  const inCooldown = lastTs > 0 && now < cooldownEnd;
+  const remaining = cooldownEnd - now;
+
+  function fmt(secs) {
+    const h = Math.floor(secs / 3600).toString().padStart(2, "0");
+    const m = Math.floor((secs % 3600) / 60).toString().padStart(2, "0");
+    const s = (secs % 60).toString().padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  }
+
+  function fmtDate(ts) {
+    if (!ts) return "Never";
+    return new Date(ts * 1000).toLocaleString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  }
+
+  const canCheckIn = isConnected && isRightChain && !inCooldown && !isPending && !isConfirming;
+
+  function onCheckIn() {
+    writeContract({
+      address: ADDRESSES.vault,
+      abi: VAULT_CHECKIN_ABI,
+      functionName: "dailyRebalanceCheck",
+      args: ["web-check-in"],
+    });
+  }
+
+  return (
+    <div className="checkInPanel">
+      <div className="checkInLeft">
+        <span className="checkInEyebrow">Daily Check-In</span>
+        <div className="checkInStatus">
+          {!isConnected
+            ? "Connect wallet to check in"
+            : inCooldown
+              ? <><strong>{fmt(remaining)}</strong> until next check-in</>
+              : lastTs === 0
+                ? "No check-in recorded yet"
+                : "Ready to check in!"}
+        </div>
+        {lastTs > 0 && (
+          <span className="checkInLast">Last: {fmtDate(lastTs)}</span>
+        )}
+        {isSuccess && <span className="checkInSuccess">✓ Check-in confirmed!</span>}
+        {writeError && <span className="checkInError">{writeError.shortMessage || "Transaction failed"}</span>}
+      </div>
+      <button
+        className="checkInBtn"
+        disabled={!canCheckIn}
+        onClick={onCheckIn}
+      >
+        {isPending || isConfirming ? "Confirming..." : inCooldown ? "Checked In" : "Check In"}
+      </button>
+    </div>
+  );
+}
+
 function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRightChain }) {
   const hasReadIssue = Boolean(data.readIssue);
 
@@ -770,6 +910,8 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
           {loading ? <><Loader2 className="spin" size={15} /> Reading...</> : "Refresh"}
         </button>
       </div>
+
+      <DailyCheckIn isConnected={isConnected} isRightChain={isRightChain} />
 
       {(!isConnected || !isRightChain) && (
         <div className="ledgerNotice">
@@ -851,6 +993,75 @@ function SummaryLedger({ data, loading, refresh, openModal, isConnected, isRight
           );
         })}
       </div>
+    </section>
+  );
+}
+
+
+function Leaderboard() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    supabase
+      .from("leaderboard")
+      .select("*")
+      .order("total", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          setError("Failed to load leaderboard.");
+        } else {
+          setEntries((data || []).map((r) => ({ addr: r.wallet, ...r })));
+        }
+        setLoading(false);
+      });
+  }, []);
+
+  function short(addr) {
+    return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  }
+
+  return (
+    <section className="leaderboardPanel">
+      <div className="sectionHead">
+        <div>
+          <h2>Leaderboard</h2>
+          <p>Ranked by protocol activity points. Updated every 4 hours.</p>
+        </div>
+      </div>
+
+      {loading && <div className="rewardLoading">Loading leaderboard…</div>}
+      {error && <div className="rewardError">{error}</div>}
+
+      {!loading && !error && entries.length === 0 && (
+        <div className="leaderboardEmpty">No activity recorded yet. Be the first to deposit and check in!</div>
+      )}
+
+      {!loading && entries.length > 0 && (
+        <div className="leaderboardList">
+          <div className="leaderboardHeader">
+            <span>#</span>
+            <span>Wallet</span>
+            <span>Deposits</span>
+            <span>Withdraws</span>
+            <span>Check-ins</span>
+            <span>Points</span>
+          </div>
+          {entries.map((e, i) => (
+            <div className={`leaderboardRow ${i === 0 ? "leaderboardTop" : ""}`} key={e.addr}>
+              <span className="leaderboardRank">{i + 1}</span>
+              <span className="leaderboardAddr">{short(e.addr)}</span>
+              <span>{e.deposits || 0}</span>
+              <span>{e.withdraws || 0}</span>
+              <span>{e.checkins || 0}</span>
+              <span className="leaderboardPoints">{e.total || 0}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className="leaderboardNote">Points: Deposit +10 · Withdraw −5 · Daily Check-in +1</p>
     </section>
   );
 }

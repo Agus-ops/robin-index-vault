@@ -21,7 +21,7 @@ const contracts = [
   ["MockStockOracle", "0xFB22dF75fFD1E89b23f9b9727880a22C039350a9"],
   ["ReceiptToken / rINDEX", "0x032F80b841c1677ae188d34004a8F6e5F4f576B4"],
   ["FeeTreasury", "0xf5579396bFaEd22a14fF43d09eD490ae78784211"],
-  ["RobinIndexVault", "0x1f51A1c104115fD24D3389428BC7Dbe370d3466b"],
+  ["RobinIndexVault", "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7"],
   ["RewardDistributor", "0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15"],
 ];
 
@@ -131,7 +131,7 @@ async function main() {
   console.log("TOKENS / ASSETS");
   console.log("------------------------------------------------------------");
 
-  const vault = new ethers.Contract("0x1f51A1c104115fD24D3389428BC7Dbe370d3466b", ABI, provider);
+  const vault = new ethers.Contract("0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7", ABI, provider);
   const treasury = new ethers.Contract("0xf5579396bFaEd22a14fF43d09eD490ae78784211", ABI, provider);
   const rewards = new ethers.Contract("0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15", ABI, provider);
 
@@ -145,7 +145,7 @@ async function main() {
     const decimals = await tryCall(t, "decimals");
     const totalSupply = await tryCall(t, "totalSupply");
 
-    const vaultBal = await tryCall(t, "balanceOf", ["0x1f51A1c104115fD24D3389428BC7Dbe370d3466b"]);
+    const vaultBal = await tryCall(t, "balanceOf", ["0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7"]);
     const treasuryBal = await tryCall(t, "balanceOf", ["0xf5579396bFaEd22a14fF43d09eD490ae78784211"]);
     const rewardBal = await tryCall(t, "balanceOf", ["0x30a6dDfCf8e1Fa11Ce5B2A9745c54123A74e0d15"]);
 

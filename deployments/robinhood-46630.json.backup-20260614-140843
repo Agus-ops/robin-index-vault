@@ -1,0 +1,68 @@
+{
+  "version": "v0.2.0",
+  "chainId": 46630,
+  "deployer": "0xD2F9f6381Fb5f00c2fC606553592dB28309c019d",
+  "owner": "0xD2F9f6381Fb5f00c2fC606553592dB28309c019d",
+  "deployedAt": "2026-06-12T21:08:05.605Z",
+  "compiler": "v0.8.34+commit.80d5c536",
+  "contracts": {
+    "oracle": "0x09FcC88e4d70DE7e0feA45D422E01D2b6922E3Aa",
+    "receiptToken": "0xa40D329C2A3ceCAc21e4D4Fdc3ef8a6A126E694c",
+    "treasury": "0x94d6BF3eb29D15642eE10ad5d1164749eB880961",
+    "vault": "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7",
+    "rewardDistributor": "0xfb2E0dD60cCF9f7A79d7f9cf883b364c83Fe8A4f"
+  },
+  "tokens": {
+    "TSLA": {
+      "address": "0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "AMZN": {
+      "address": "0x5884aD2f920c162CFBbACc88C9C51AA75eC09E02",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "NFLX": {
+      "address": "0x3b8262A63d25f0477c4DDE23F83cfe22Cb768C93",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "PLTR": {
+      "address": "0x1FBE1a0e43594b3455993B5dE5Fd0A7A266298d0",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "AMD": {
+      "address": "0x71178BAc73cBeb415514eB542a8995b82669778d",
+      "decimals": 18,
+      "isStock": true,
+      "isSettlement": false
+    },
+    "USDG": {
+      "address": "0x7E955252E15c84f5768B83c41a71F9eba181802F",
+      "decimals": 6,
+      "isStock": false,
+      "isSettlement": true
+    }
+  },
+  "initialPrices8": {
+    "TSLA": "18000000000",
+    "AMZN": "18500000000",
+    "NFLX": "65000000000",
+    "PLTR": "7500000000",
+    "AMD": "16000000000",
+    "USDG": "100000000"
+  },
+  "transactions": {
+    "MockStockOracleDeploy": "0x3d4e7f3c206b9d273c7eaa3e7fb0b193add502a0f485a17ce8dd1df8eba6677b",
+    "ReceiptTokenDeploy": "0x097c63a015a83c809e6e92c938340a27375e7f2adb698ac1e0aad5c0feec4057",
+    "FeeTreasuryDeploy": "0x93a61f0b2a53fcf92aa3ba81a48c7c0d62daf4edda303236a30efa89dc3f82c4",
+    "RobinIndexVaultDeploy": "0x4aebbd3fabc51d61ed429af2469201924b9c79a33eb10ad0c54bcd40b39c8bce",
+    "RewardDistributorDeploy": "0x5b25c5683201488af181320c44d025a77a8a273bf9b31238b6fb9ad7255d4d75"
+  }
+}

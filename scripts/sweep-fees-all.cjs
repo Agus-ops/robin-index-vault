@@ -26,7 +26,7 @@ const formatUnits = (v, d) =>
 const isZero = (v) =>
   typeof v === "bigint" ? v === 0n : v.isZero();
 
-const VAULT = "0x1f51A1c104115fD24D3389428BC7Dbe370d3466b";
+const VAULT = "0xD39a604Ddc92115C5cB0F70fc85AC5581D9e81A7";
 
 const TOKENS = [
   ["TSLA", "0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E"],
