@@ -512,8 +512,8 @@ function App() {
               <a href="https://github.com/Agus-ops/robin-index-vault" target="_blank" rel="noreferrer">
                 GitHub <ExternalLink size={14} />
               </a>
-              <a href="https://github.com/Agus-ops/robin-index-vault/releases/tag/v0.3.0" target="_blank" rel="noreferrer">
-                Release v0.3.0 <ExternalLink size={14} />
+              <a href="https://github.com/Agus-ops/robin-index-vault/releases/tag/v0.5.1" target="_blank" rel="noreferrer">
+                Release v0.5.1 <ExternalLink size={14} />
               </a>
             </nav>
           </aside>

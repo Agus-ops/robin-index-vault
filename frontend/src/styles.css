@@ -406,7 +406,7 @@ h1 {
   width: min(390px, 92vw);
   min-height: 100vh;
   padding: 18px;
-  animation: slideIn 250ms ease-out;
+  animation: slideIn 150ms ease-out;
 }
 
 .drawerHead {
