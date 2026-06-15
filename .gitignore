@@ -6,3 +6,5 @@ cache/
 .DS_Store
 second-wallet-local-only.txt
 .env.backup.*
+scripts/supabase-client.mjs
+frontend/src/lib/supabase.js
