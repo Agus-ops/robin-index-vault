@@ -1,22 +1,38 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
-import { supabase } from "../lib/supabase";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
-// 1. KOMPONEN PREVIEW
+async function fetchPoints() {
+  const res = await fetch("/points.json", { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const raw = await res.json();
+
+  let arr = [];
+  if (Array.isArray(raw)) {
+    arr = raw;
+  } else {
+    arr = Object.entries(raw).map(([wallet, v]) => ({ wallet, ...v }));
+  }
+
+  return arr
+    .map((r) => ({
+      addr:      r.wallet || r.addr || "unknown",
+      deposits:  r.deposits  || 0,
+      withdraws: r.withdraws || 0,
+      checkins:  r.checkins  || 0,
+      total:     r.total     || 0,
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
 export function LeaderboardPreview({ go }) {
   const [top, setTop] = useState([]);
 
   useEffect(() => {
-    supabase
-      .from("leaderboard")
-      .select("wallet, total")
-      .order("total", { ascending: false })
-      .limit(3)
-      .then(({ data }) => {
-        setTop((data || []).map((r) => ({ addr: r.wallet, total: r.total })));
-      });
+    fetchPoints()
+      .then((arr) => setTop(arr.slice(0, 3)))
+      .catch((e) => console.error("LeaderboardPreview:", e));
   }, []);
 
   function short(addr) {
@@ -47,26 +63,16 @@ export function LeaderboardPreview({ go }) {
   );
 }
 
-// 2. KOMPONEN UTAMA
 export function Leaderboard() {
   const { address } = useAccount();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
 
   useEffect(() => {
-    supabase
-      .from("leaderboard")
-      .select("*")
-      .order("total", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) {
-          setError("Failed to load leaderboard.");
-        } else {
-          setEntries((data || []).map((r) => ({ addr: r.wallet, ...r })));
-        }
-        setLoading(false);
-      });
+    fetchPoints()
+      .then((arr) => { setEntries(arr); setLoading(false); })
+      .catch((e)  => { console.error("Leaderboard:", e); setError("Failed to load leaderboard."); setLoading(false); });
   }, []);
 
   function short(addr) {
@@ -74,7 +80,7 @@ export function Leaderboard() {
   }
 
   const totalUsers  = entries.length;
-  const totalPoints = entries.reduce((sum, e) => sum + (e.total || 0), 0);
+  const totalPoints = entries.reduce((sum, e) => sum + e.total, 0);
 
   return (
     <section className="leaderboardPanel">
@@ -85,7 +91,6 @@ export function Leaderboard() {
         </div>
       </div>
 
-      {/* Stats 2 kotak */}
       <div className="leaderboardStats">
         <div className="leaderboardStatCard">
           <span>Total Users</span>
@@ -107,21 +112,16 @@ export function Leaderboard() {
       {!loading && entries.length > 0 && (
         <div className="leaderboardList">
           <div className="leaderboardHeader">
-            <span>#</span>
-            <span>Wallet</span>
-            <span>Dep</span>
-            <span>Wdr</span>
-            <span>CI</span>
-            <span>Pts</span>
+            <span>#</span><span>Wallet</span><span>Dep</span><span>Wdr</span><span>CI</span><span>Pts</span>
           </div>
           {entries.map((e, i) => {
             const isMe = address && e.addr.toLowerCase() === address.toLowerCase();
             const rowClass = [
               "leaderboardRow",
-              i === 0 ? "leaderboardGold" : "",
+              i === 0 ? "leaderboardGold"   : "",
               i === 1 ? "leaderboardSilver" : "",
               i === 2 ? "leaderboardBronze" : "",
-              isMe    ? "leaderboardMe" : "",
+              isMe    ? "leaderboardMe"     : "",
             ].filter(Boolean).join(" ");
 
             return (
@@ -130,10 +130,10 @@ export function Leaderboard() {
                 <span className="leaderboardAddr">
                   {short(e.addr)}{isMe && <span className="leaderboardMeTag"> you</span>}
                 </span>
-                <span>{e.deposits  || 0}</span>
-                <span>{e.withdraws || 0}</span>
-                <span>{e.checkins  || 0}</span>
-                <span className="leaderboardPoints">{e.total || 0}</span>
+                <span>{e.deposits}</span>
+                <span>{e.withdraws}</span>
+                <span>{e.checkins}</span>
+                <span className="leaderboardPoints">{e.total}</span>
               </div>
             );
           })}
