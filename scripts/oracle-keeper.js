@@ -61,33 +61,32 @@ async function waitTx(label, tx) {
   return rc;
 }
 
-async function fetchFinnhubPrice(symbol) {
-  const key = process.env.FINNHUB_API_KEY;
+async function fetchTwelveDataPrice(symbol) {
+  const key = process.env.TWELVEDATA_API_KEY;
 
-  if (!key) throw new Error("Missing FINNHUB_API_KEY in .env");
+  if (!key) throw new Error("Missing TWELVEDATA_API_KEY in .env");
 
-  const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${encodeURIComponent(key)}`;
+  const url = `https://api.twelvedata.com/price?symbol=${encodeURIComponent(symbol)}&apikey=${encodeURIComponent(key)}`;
   const res = await fetch(url);
 
   if (!res.ok) {
-    throw new Error(`Finnhub HTTP ${res.status} for ${symbol}`);
+    throw new Error(`TwelveData HTTP ${res.status} for ${symbol}`);
   }
 
   const data = await res.json();
 
-  const current = Number(data.c);
-  const previousClose = Number(data.pc);
+  if (data.status === "error") {
+    throw new Error(`TwelveData error for ${symbol}: ${data.message}`);
+  }
 
-  const selected = Number.isFinite(current) && current > 0
-    ? current
-    : previousClose;
+  const price = Number(data.price);
 
-  if (!Number.isFinite(selected) || selected <= 0) {
-    throw new Error(`Invalid Finnhub price for ${symbol}: ${JSON.stringify(data)}`);
+  if (!Number.isFinite(price) || price <= 0) {
+    throw new Error(`Invalid TwelveData price for ${symbol}: ${JSON.stringify(data)}`);
   }
 
   return {
-    price: selected,
+    price,
     raw: data,
   };
 }
@@ -157,7 +156,7 @@ async function main() {
     let quote;
 
     try {
-      quote = await fetchFinnhubPrice(symbol);
+      quote = await fetchTwelveDataPrice(symbol);
     } catch (err) {
       console.log("❌ Finnhub fetch failed:", err.message);
       continue;

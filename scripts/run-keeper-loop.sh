@@ -16,8 +16,8 @@ while true; do
   cp /opt/robin-index-vault/data/points.json /opt/robin-index-vault/frontend/public/points.json || true
 
   echo
-  echo "[KEEPER] sleeping 4 hours..."
-  sleep 14400
+  echo "[KEEPER] sleeping 30 minutes..."
+  sleep 1800
 done
 
 # Loop terpisah untuk points + leaderboard (background)

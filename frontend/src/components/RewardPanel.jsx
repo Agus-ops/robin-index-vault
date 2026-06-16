@@ -9,18 +9,13 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { formatUnits, parseAbi } from "viem";
 
-const TREASURY = "0x05FbC935652605B697522B3f0bd4c14FfBAb8209";
-const REWARD_DISTRIBUTOR = "0xf559F8511022bBb63137523356d19ec4aCBadd53";
+import { ADDRESSES } from "../contracts/addresses";
+const TREASURY = ADDRESSES.treasury;
+const REWARD_DISTRIBUTOR = ADDRESSES.rewardDistributor;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const BUCKET_REWARDS = 1;
 
-const TOKENS = [
-  { symbol: "TSLA", address: "0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E", decimals: 18 },
-  { symbol: "AMZN", address: "0x5884aD2f920c162CFBbACc88C9C51AA75eC09E02", decimals: 18 },
-  { symbol: "NFLX", address: "0x3b8262A63d25f0477c4DDE23F83cfe22Cb768C93", decimals: 18 },
-  { symbol: "PLTR", address: "0x1FBE1a0e43594b3455993B5dE5Fd0A7A266298d0", decimals: 18 },
-  { symbol: "AMD", address: "0x71178BAc73cBeb415514eB542a8995b82669778d", decimals: 18 },
-];
+import { TOKENS } from "../contracts/tokens";
 
 const treasuryAbi = parseAbi([
   "function bucketBalance(address token,uint8 bucket) view returns (uint256)",
@@ -179,7 +174,13 @@ export default function RewardPanel() {
       <div className="rewardSummaryGrid">
         <div className="rewardSummaryCard">
           <span>Reward cycle</span>
-          <strong>{weekLoading ? "Loading…" : "Jun 11–17, 2026"}</strong>
+          <strong>{weekLoading ? "Loading…" : currentWeek !== undefined ? (() => {
+  const weekMs = Number(currentWeek) * 7 * 24 * 60 * 60 * 1000;
+  const start = new Date(weekMs);
+  const end = new Date(weekMs + 6 * 24 * 60 * 60 * 1000);
+  const fmt = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `${fmt(start)} – ${fmt(end)}, ${end.getFullYear()}`;
+})() : "—"}</strong>
         </div>
         <div className="rewardSummaryCard">
           <span>Connected wallet</span>
