@@ -9,13 +9,13 @@ Testnet stock-token index vault on Robinhood Chain Testnet (Chain ID 46630).
 ## Contracts
 
 | Module | Address |
-|--------|-------|
-| MockStockOracle | `0xC1c84d45DB3CD10e300CCc84F6900995c2260d1A` |
-| ReceiptToken (rINDEX) | `0x54269f54c3B28e6E23e2D2d79BD8b9c9C501bcC2` |
-| FeeTreasury | `0x05FbC935652605B697522B3f0bd4c14FfBAb8209` |
-| RobinIndexVault | `0x99E535AbCcCF89d6596F5c27cD3244317c1C2450` |
-| StockRouter	| 0x95c7e649D972f34C2a67813c86ed6936F2008149 |
-| RewardDistributor | `0xf559F8511022bBb63137523356d19ec4aCBadd53` |
+|---|---|
+| MockStockOracle | 0xC1c84d45DB3CD10e300CCc84F6900995c2260d1A |
+| ReceiptToken (rINDEX) | 0x54269f54c3B28e6E23e2D2d79BD8b9c9C501bcC2 |
+| FeeTreasury | 0x05FbC935652605B697522B3f0bd4c14FfBAb8209 |
+| RobinIndexVault | 0x99E535AbCcCF89d6596F5c27cD3244317c1C2450 |
+| RewardDistributor | 0xf559F8511022bBb63137523356d19ec4aCBadd53 |
+| StockRouter | 0x95c7e649D972f34C2a67813c86ed6936F2008149 | `0xf559F8511022bBb63137523356d19ec4aCBadd53` |
 
 ---
 
