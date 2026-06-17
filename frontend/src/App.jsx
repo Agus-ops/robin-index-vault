@@ -29,10 +29,12 @@ import { Leaderboard } from "./components/Leaderboard";
 import { PortfolioPanel } from "./components/PortfolioPanel";
 import { SummaryLedger } from "./components/SummaryLedger";
 import { TreasuryPanel } from "./components/TreasuryPanel";
+import { SwapPanel } from "./components/SwapPanel";
 
 const USER_VIEWS = [
   ["overview", "Dashboard"],
   ["ledger", "Vault Ledger"],
+  ["swap", "Stock Swap"],
   ["rindex", "Portfolio"],
   ["treasury", "Treasury"],
 ];
@@ -201,6 +203,7 @@ function App() {
 
       showToast("success", `Deposit submitted: ${selectedToken.symbol}`, depositHash);
       await waitForTx(depositHash);
+      await addPoints(address, "deposit").catch(() => {});
       closeModal();
     } catch (err) {
       showToast("error", err?.shortMessage || err?.message || "Deposit failed");
@@ -230,6 +233,7 @@ function App() {
 
       showToast("success", `Withdraw submitted: ${selectedToken.symbol}`, withdrawHash);
       await waitForTx(withdrawHash);
+      await addPoints(address, "withdraw").catch(() => {});
       closeModal();
     } catch (err) {
       showToast("error", err?.shortMessage || err?.message || "Withdraw failed");
@@ -524,6 +528,23 @@ function App() {
               isConnected={isConnected}
               isRightChain={isRightChain}
             />
+          </>
+        )}
+
+
+        {view === "swap" && (
+          <>
+            <ViewHero
+              title="Stock Swap"
+              subtitle="Swap testnet stock tokens directly via StockRouter. 1% fee, 10-minute cooldown per wallet."
+            />
+            <div className="singlePanel">
+              <SwapPanel
+                data={data}
+                isConnected={isConnected}
+                isRightChain={isRightChain}
+              />
+            </div>
           </>
         )}
 

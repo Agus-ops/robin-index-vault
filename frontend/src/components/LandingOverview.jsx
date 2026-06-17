@@ -10,6 +10,14 @@ export function LandingOverview({ go, data, loading }) {
         <button className="primaryBtn" onClick={() => go("ledger")}>Open Vault Ledger</button>
       </article>
 
+
+      <article className="landingCard">
+        <span className="cardKicker">Stock DEX</span>
+        <h2>Stock Swap</h2>
+        <p>Swap testnet stock tokens directly via StockRouter. 1% fee, 10-minute cooldown per wallet.</p>
+        <button className="secondaryBtn" onClick={() => go("swap")}>Open Swap</button>
+      </article>
+
       <article className="landingCard">
         <span className="cardKicker">Receipt token</span>
         <h2>Non-transferable rINDEX</h2>
@@ -35,23 +43,26 @@ export function LandingOverview({ go, data, loading }) {
       <LeaderboardPreview go={go} />
 
       {/* Card Live Oracle Prices */}
-      <article className="landingCard halfLanding oraclePriceCard">
+      <article className="landingCard wideLanding oraclePriceCard">
         <span className="cardKicker">Live Oracle</span>
         <h2>Token Prices</h2>
         <div className="oraclePriceList">
           {[
-            { symbol: "TSLA", fallback: 180 },
-            { symbol: "AMZN", fallback: 185 },
-            { symbol: "NFLX", fallback: 650 },
-            { symbol: "PLTR", fallback: 75 },
-            { symbol: "AMD",  fallback: 160 },
-            { symbol: "USDG", fallback: 1 },
+            { symbol: "TSLA", name: "Tesla",     fallback: 180 },
+            { symbol: "AMZN", name: "Amazon",    fallback: 185 },
+            { symbol: "NFLX", name: "Netflix",   fallback: 650 },
+            { symbol: "PLTR", name: "Palantir",  fallback: 75 },
+            { symbol: "AMD",  name: "AMD",       fallback: 160 },
+            { symbol: "USDG", name: "Global Dollar", fallback: 1, forceLive: true },
           ].map((t) => {
             const price = data?.prices?.[t.symbol] || t.fallback;
-            const fresh = data?.fresh?.[t.symbol];
+            const fresh = t.forceLive ? true : data?.fresh?.[t.symbol];
             return (
               <div className="oraclePriceRow" key={t.symbol}>
-                <span className="oraclePriceSymbol">{t.symbol}</span>
+                <div className="oraclePriceSymbolGroup">
+                  <span className="oraclePriceSymbol">{t.symbol}</span>
+                  <span className="oraclePriceName">{t.name}</span>
+                </div>
                 <span className={fresh === false ? "oraclePriceFresh stale" : "oraclePriceFresh"}>
                   {fresh === false ? "stale" : "live"}
                 </span>

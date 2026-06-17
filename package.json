@@ -39,16 +39,20 @@
     "reward-keeper": "node scripts/reward-keeper.js",
     "auto-allocate": "node scripts/auto-allocate.js",
     "daily-tracker": "node scripts/daily-checkin-tracker.mjs",
-    "points-tracker": "node scripts/points-tracker.mjs"
+    "points-tracker": "node scripts/points-tracker.mjs",
+    "router-keeper": "node scripts/router-keeper.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
+    "@openzeppelin/contracts": "^5.6.1",
     "@supabase/supabase-js": "^2.108.1",
     "dotenv": "^17.4.2",
     "ethers": "^6.16.0",
+    "hardhat": "^2.22.19",
     "ws": "^8.21.0"
   },
   "devDependencies": {

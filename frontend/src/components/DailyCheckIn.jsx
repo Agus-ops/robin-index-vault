@@ -1,3 +1,4 @@
+import { addPoints } from "../lib/points";
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseAbi } from "viem";
@@ -36,6 +37,7 @@ export function DailyCheckIn({ isConnected, isRightChain }) {
   useEffect(() => {
     if (isSuccess) {
       refetchLast();
+      addPoints(address, "checkin").catch(() => {});
       reset();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

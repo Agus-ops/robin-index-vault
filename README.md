@@ -44,12 +44,13 @@ Testnet stock-token index vault on Robinhood Chain Testnet (Chain ID 46630).
 - Keeper-managed fee sweep and weekly reward funding
 - Operator Control Room, Oracle Manager, Verified Contracts dashboard
 - Mobile-optimized neon UI (black + neon pink + neon green)
+- StockRouter internal swap (TSLA/AMZN/NFLX/PLTR/AMD, oracle-priced, 1% fee, 10-min cooldown)
+- Swap UI with approve flow, preview, cooldown timer
 
 ---
 
 ## Deferred
 
-- StockRouter (internal swap/rebalance)
 - Bridge to Sepolia
 - Merkle Distributor v2
 - USDG as active reward token

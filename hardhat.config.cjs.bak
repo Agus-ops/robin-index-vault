@@ -1,0 +1,40 @@
+require("@nomicfoundation/hardhat-toolbox");
+
+module.exports = {
+  solidity: {
+    version: "0.8.34",
+    settings: {
+      optimizer: { enabled: true, runs: 200 },
+      viaIR: true,
+    },
+  },
+
+  networks: {
+    robinhoodTestnet: {
+      url: process.env.RPC_URL || "https://testnet.rpc.chain.robinhood.com",
+      chainId: 46630,
+    },
+  },
+
+  etherscan: {
+    apiKey: {
+      robinhoodTestnet: "abc",
+    },
+    customChains: [
+      {
+        network: "robinhoodTestnet",
+        chainId: 46630,
+        urls: {
+          apiURL: "https://explorer.testnet.chain.robinhood.com/api",
+          browserURL: "https://explorer.testnet.chain.robinhood.com",
+        },
+      },
+    ],
+  },
+
+  paths: {
+    sources: "./contracts",
+    artifacts: "./artifacts",
+    cache: "./cache",
+  },
+};

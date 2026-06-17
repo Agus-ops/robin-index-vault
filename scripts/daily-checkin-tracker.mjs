@@ -16,7 +16,7 @@ function artifact(name) {
 }
 
 async function main() {
-  const provider = new ethers.JsonRpcProvider(process.env.ROBIN_RPC);
+  const provider = new ethers.JsonRpcProvider(process.env.ROBIN_RPC_PUBLIC);
   const vault = new ethers.Contract(
     DEPLOY.contracts.vault,
     artifact("RobinIndexVault").abi,

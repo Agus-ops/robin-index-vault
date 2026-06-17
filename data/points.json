@@ -1,8 +1,14 @@
 {
   "0xd2f9f6381fb5f00c2fc606553592db28309c019d": {
-    "deposits": 17,
-    "withdraws": 14,
-    "checkins": 1,
-    "total": 101
+    "deposits": 16,
+    "withdraws": 17,
+    "checkins": 2,
+    "total": 77
+  },
+  "0xefbb8e470b4b1cc6826b7e47a8ca141e392ccf3e": {
+    "deposits": 0,
+    "withdraws": 0,
+    "checkins": 0,
+    "total": 0
   }
 }

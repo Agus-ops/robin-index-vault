@@ -934,3 +934,93 @@ main {
 /* ── LEADERBOARD PREVIEW FIX ── */
 .leaderboardPreviewEmpty { color: rgba(230,255,239,0.5); font-size: 13px; }
 .leaderboardPreviewBtn   { margin-top: auto; }
+
+/* SwapPanel */
+.swapPanel{display:flex;flex-direction:column;gap:1rem;width:100%;padding:0 0 2rem}
+.swapCard{background:#0d0d0d;border:1.5px solid #FF0080;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;gap:.85rem}
+.swapHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem}
+.swapLabel{font-size:.65rem;font-weight:700;letter-spacing:.1em;color:#00ff88}
+.swapFeeTag{font-size:.65rem;color:#666;background:#1a1a1a;padding:2px 8px;border-radius:99px;border:1px solid #2a2a2a}
+.swapField{background:#111;border:1px solid #e91e8c33;border-radius:8px;padding:.75rem;display:flex;flex-direction:column;gap:.4rem;transition:border-color .15s}
+.swapField:focus-within{border-color:#3a1a3e}
+.swapFieldHeader{display:flex;justify-content:space-between;align-items:center}
+.swapFieldLabel{font-size:.65rem;color:#fff;letter-spacing:.06em;text-transform:uppercase}
+.swapBal{font-size:.65rem;color:#fff;display:flex;align-items:center;gap:.3rem}
+.maxBtn{font-size:.6rem;font-weight:700;color:#e91e8c;background:transparent;border:1px solid #e91e8c44;border-radius:4px;padding:1px 5px;cursor:pointer}
+.maxBtn:hover{background:#e91e8c22}
+.swapRow{display:flex;align-items:center;gap:.5rem}
+.tokenSelect{background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:.85rem;font-weight:700;padding:.4rem .5rem;min-width:80px;cursor:pointer;outline:none;flex-shrink:0}
+.tokenSelect:focus{border-color:#e91e8c66}
+.swapInput{background:transparent;border:none;color:#fff;font-size:1.15rem;font-weight:600;flex:1;text-align:right;outline:none;min-width:0}
+.swapInput::placeholder{color:#333}
+.swapInput::-webkit-outer-spin-button,.swapInput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.swapOutputAmt{flex:1;text-align:right;font-size:1.15rem;font-weight:600;color:#00ff88}
+.swapUsd{font-size:.68rem;color:#555;text-align:right}
+.swapWarn{font-size:.68rem;color:#ff6b6b;text-align:right}
+.swapFlipRow{display:flex;justify-content:center;margin:-.25rem 0}
+.flipBtn{background:#1a1a1a;border:1px solid #333;border-radius:50%;color:#fff;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.flipBtn:hover{background:#2a1a2e;border-color:#e91e8c66;color:#e91e8c}
+.swapPreview{background:#0a0a0a;border:1px solid #1e1e1e;border-radius:8px;padding:.6rem .75rem;display:flex;flex-direction:column;gap:.35rem}
+.previewRow{display:flex;justify-content:space-between;font-size:.72rem;color:#fff}
+.previewRow span:last-child{color:#fff}
+.previewRow.highlight span:first-child{color:#888}
+.previewRow.highlight span:last-child{color:#00ff88;font-weight:600}
+.swapCooldown{display:flex;align-items:center;gap:.4rem;background:#1a1000;border:1px solid #3a2800;border-radius:6px;padding:.45rem .65rem;color:#ffaa00;font-size:.75rem}
+.swapBtn{width:100%;padding:.75rem;background:linear-gradient(135deg,#e91e8c,#c2185b);border:none;border-radius:8px;color:#fff;font-size:.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:opacity .15s}
+.swapBtn:hover:not(:disabled){opacity:.9}
+.swapBtn:disabled{opacity:.4;cursor:not-allowed}
+.spinIcon{animation:spinRotate .8s linear infinite}
+@keyframes spinRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.swapNotice{text-align:center;font-size:.75rem;color:#555;padding:.5rem}
+.swapNotice--warn{color:#ffaa00;background:#1a1000;border:1px solid #3a2800;border-radius:6px;padding:.5rem .75rem}
+.swapTxLink{text-align:center}
+.swapTxLink a{font-size:.7rem;color:#555;text-decoration:none;display:inline-flex;align-items:center;gap:.25rem}
+.swapTxLink a:hover{color:#00ff88}
+.swapToast{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.6rem .85rem;border-radius:8px;font-size:.75rem;border:1px solid transparent;animation:slideDown .2s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.swapToast--info{background:#0a1a2a;border-color:#1a3a5a;color:#6aadff}
+.swapToast--success{background:#001a0e;border-color:#0a3a1e;color:#00ff88}
+.swapToast--error{background:#1a0008;border-color:#3a0018;color:#ff6b6b}
+.swapToastLink{display:inline-flex;align-items:center;gap:2px;text-decoration:none;color:inherit;opacity:.7;flex-shrink:0;font-weight:600}
+.swapInfoBox{background:#0d0d0d;border:1.5px solid #FF0080;border-radius:10px;padding:1rem}
+.swapInfoTitle{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#e91e8c;margin-bottom:.6rem}
+.swapInfoGrid{display:flex;flex-direction:column;gap:.3rem}
+.swapInfoRow{display:flex;justify-content:space-between;font-size:.72rem}
+.swapInfoRow span:first-child{color:#fff}
+.swapInfoRow span:last-child{color:#fff;font-weight:500}
+
+
+@media (min-width: 768px) {
+  .swapPanel{flex-direction:column;width:100%}
+  .swapTopRow{display:flex;flex-direction:row;gap:1.5rem;width:100%;align-items:flex-start}
+  .swapCard{flex:2;min-width:0}
+  .swapInfoBox{flex:1;min-width:180px;max-width:240px;align-self:flex-start}
+  .swapHistoryBox{width:100%;margin-top:0}
+}
+.swapHistoryBox{background:#0d0d0d;border:1.5px solid #FF0080;border-radius:12px;padding:1.5rem;min-height:100px;width:100%}
+.swapHistoryTitle{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#e91e8c;margin-bottom:1rem}
+.swapHistoryEmpty{font-size:.8rem;color:#444;text-align:center;padding:1.5rem 0}
+.oraclePriceSymbolGroup{display:flex;flex-direction:column;gap:1px}
+.oraclePriceName{font-size:.65rem;color:#555;font-weight:400}
+.oraclePriceCard{align-self:start!important}
+.oraclePriceCard .oraclePriceList{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem 1rem}
+.oraclePriceCard .oraclePriceRow{flex-direction:column;gap:.15rem}
+.oraclePriceCard{display:flex;flex-direction:column;gap:1rem}
+.oraclePriceCard h2{margin:0}
+.oraclePriceCard .oraclePriceList{display:grid;grid-template-columns:repeat(6,1fr);gap:.75rem}
+.oraclePriceCard .oraclePriceRow{display:flex;flex-direction:column;align-items:center;gap:.25rem;text-align:center}
+.oraclePriceCard .oraclePriceSymbol{font-size:.85rem;font-weight:700}
+.oraclePriceCard .oraclePriceName{font-size:.6rem;color:#555}
+.oraclePriceCard .oraclePriceValue{font-size:.85rem}
+.oraclePriceCard .oraclePriceList{gap:1.25rem 2rem!important}
+@media (min-width: 768px) {
+  .oraclePriceCard .oraclePriceList{gap:1.5rem 3.5rem!important}
+  .oraclePriceCard .oraclePriceName{white-space:nowrap}
+}
+@media (max-width: 767px) {
+  .oraclePriceCard .oraclePriceList{gap:1rem 1.25rem!important}
+  .oraclePriceCard .oraclePriceSymbol{font-size:.75rem}
+  .oraclePriceCard .oraclePriceValue{font-size:.75rem}
+  .oraclePriceCard .oraclePriceName{font-size:.55rem}
+}
+.leaderboardRow{border:1px solid #FF008044!important}
