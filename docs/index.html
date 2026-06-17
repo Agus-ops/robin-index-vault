@@ -3,340 +3,156 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Robin Index Vault v0.5.1</title>
+  <title>Robin Index Vault v0.7.0</title>
   <style>
     :root {
-      --bg: #02170f;
-      --bg2: #031f14;
-      --panel: rgba(8, 56, 37, 0.62);
-      --panel2: rgba(12, 76, 50, 0.55);
-      --line: rgba(143, 255, 188, 0.16);
-      --text: #ecfff4;
-      --muted: #a8cbb9;
-      --soft: #6ce7a4;
-      --green: #86ff9e;
-      --cyan: #55f5e8;
-      --yellow: #facc15;
-      --shadow: rgba(0, 0, 0, 0.42);
+      --bg: #0a0a0a;
+      --card: #0d0d0d;
+      --card2: #111;
+      --line: #FF008033;
+      --pink: #FF0080;
+      --green: #00ff88;
+      --text: #ffffff;
+      --muted: #888;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      margin: 0;
+      background: var(--bg);
       color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at 18% 8%, rgba(98, 255, 165, 0.22), transparent 28rem),
-        radial-gradient(circle at 85% 20%, rgba(57, 255, 214, 0.14), transparent 26rem),
-        linear-gradient(180deg, #062616 0%, #02170f 48%, #01110b 100%);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
       min-height: 100vh;
     }
+    a { color: inherit; text-decoration: none; }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 56px; }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+    /* Topbar */
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 15px; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px var(--green); }
+    .chain { border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; font-size: 12px; color: var(--muted); }
 
-    .wrap {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 24px 16px 56px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 22px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 900;
-      color: var(--text);
-    }
-
-    .logoDot {
-      width: 13px;
-      height: 13px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--green), var(--cyan));
-      box-shadow: 0 0 24px rgba(134, 255, 158, 0.75);
-    }
-
-    .chain {
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.045);
-      padding: 8px 11px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-
+    /* Hero */
     .hero {
-      border: 1px solid var(--line);
-      background:
-        linear-gradient(135deg, rgba(8, 72, 45, 0.76), rgba(3, 31, 20, 0.88)),
-        radial-gradient(circle at 80% 10%, rgba(134, 255, 158, 0.16), transparent 22rem);
-      border-radius: 28px;
-      padding: clamp(22px, 5vw, 44px);
-      box-shadow: 0 24px 80px var(--shadow);
-      overflow: hidden;
+      border: 1.5px solid var(--pink);
+      background: linear-gradient(135deg, #1a0010, #0a0a0a);
+      border-radius: 24px;
+      padding: clamp(24px, 5vw, 48px);
       position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 60px #FF008022;
     }
-
-    .hero:after {
+    .hero::after {
       content: "";
       position: absolute;
-      right: -90px;
-      top: -90px;
-      width: 300px;
-      height: 300px;
+      right: -80px; top: -80px;
+      width: 260px; height: 260px;
       border-radius: 50%;
-      background: rgba(134, 255, 158, 0.08);
-      border: 1px solid rgba(134, 255, 158, 0.08);
+      background: radial-gradient(circle, #FF008018, transparent 70%);
     }
+    .eyebrow { color: var(--pink); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; margin-bottom: 12px; }
+    h1 { font-size: clamp(38px, 8vw, 72px); line-height: 0.96; letter-spacing: -0.05em; color: var(--green); margin-bottom: 16px; }
+    .lead { color: var(--muted); font-size: clamp(15px, 2.2vw, 18px); line-height: 1.7; max-width: 700px; }
 
-    .eyebrow {
-      color: var(--green);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      font-weight: 900;
-    }
+    .badges { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+    .badge { border: 1px solid var(--line); border-radius: 999px; padding: 7px 13px; background: #FF008011; color: var(--green); font-weight: 700; font-size: 12px; }
 
-    h1 {
-      margin: 10px 0 14px;
-      font-size: clamp(42px, 8vw, 76px);
-      line-height: 0.98;
-      letter-spacing: -0.06em;
-    }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+    .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 12px; border: 1.5px solid var(--line); background: #FF008011; font-weight: 800; font-size: 14px; color: var(--text); transition: opacity .15s; }
+    .btn:hover { opacity: .8; }
+    .btn.primary { background: linear-gradient(135deg, var(--pink), #c2185b); border-color: transparent; color: #fff; box-shadow: 0 8px 24px #FF008033; }
 
-    .lead {
-      max-width: 760px;
-      color: var(--muted);
-      font-size: clamp(16px, 2.4vw, 20px);
-      line-height: 1.7;
-    }
+    /* Grid */
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; margin-top: 16px; }
+    .card { grid-column: span 12; border: 1.5px solid var(--pink); background: var(--card); border-radius: 18px; padding: 20px; }
+    @media (min-width: 680px) { .half { grid-column: span 6; } .third { grid-column: span 4; } }
 
-    .badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 24px;
-    }
+    h2 { font-size: 22px; letter-spacing: -0.03em; color: var(--green); margin-bottom: 8px; }
+    .kicker { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 800; color: var(--pink); margin-bottom: 6px; }
+    .stat { font-size: 36px; font-weight: 950; color: var(--green); letter-spacing: -0.05em; margin: 8px 0; line-height: 1; }
+    .muted { color: var(--muted); font-size: 14px; line-height: 1.6; }
 
-    .badge {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 9px 12px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--green);
-      font-weight: 800;
-      font-size: 13px;
-    }
+    .rows { display: grid; gap: 8px; margin-top: 14px; }
+    .row { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #FF008022; padding-top: 8px; color: var(--muted); font-size: 14px; }
+    .row strong { color: var(--text); }
 
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 28px;
-    }
+    .pillset { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .asset { background: #00ff8814; color: var(--green); border: 1px solid #00ff8833; border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 13px; }
+    .asset.pink { background: #FF008014; color: var(--pink); border-color: #FF008033; }
 
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 46px;
-      padding: 0 18px;
-      border-radius: 15px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.07);
-      color: var(--text);
-      font-weight: 900;
-    }
+    code { color: var(--green); background: #00ff8811; border: 1px solid #00ff8833; border-radius: 6px; padding: 2px 6px; font-size: 13px; word-break: break-all; }
 
-    .btn.primary {
-      color: #062616;
-      background: linear-gradient(135deg, var(--green), var(--cyan));
-      border-color: rgba(255, 255, 255, 0.28);
-      box-shadow: 0 16px 34px rgba(85, 245, 232, 0.18);
-    }
+    .footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: 13px; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 16px;
-      margin-top: 16px;
+    /* Glow bg */
+    body::before {
+      content: "";
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(circle at 15% 10%, #FF008018, transparent 30rem),
+        radial-gradient(circle at 85% 80%, #00ff8810, transparent 25rem);
+      pointer-events: none;
+      z-index: 0;
     }
-
-    .card {
-      grid-column: span 12;
-      border: 1px solid var(--line);
-      background: linear-gradient(135deg, var(--panel), rgba(2, 28, 18, 0.74));
-      border-radius: 24px;
-      padding: 20px;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
-    }
-
-    @media (min-width: 780px) {
-      .half { grid-column: span 6; }
-      .third { grid-column: span 4; }
-    }
-
-    h2 {
-      margin: 0 0 10px;
-      font-size: 25px;
-      letter-spacing: -0.03em;
-    }
-
-    h3 {
-      margin: 0 0 6px;
-      font-size: 16px;
-    }
-
-    p {
-      margin: 0;
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
-    .stat {
-      font-size: 38px;
-      line-height: 1;
-      margin: 10px 0;
-      color: var(--green);
-      font-weight: 950;
-      letter-spacing: -0.05em;
-    }
-
-    .rows {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      border-top: 1px solid var(--line);
-      padding-top: 10px;
-      color: var(--muted);
-    }
-
-    .row strong {
-      color: var(--text);
-      text-align: right;
-    }
-
-    .pillset {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-      margin-top: 14px;
-    }
-
-    .asset {
-      background: rgba(134, 255, 158, 0.14);
-      color: var(--green);
-      border: 1px solid rgba(134, 255, 158, 0.22);
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-weight: 900;
-      font-size: 13px;
-    }
-
-    code {
-      color: #dfffee;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 2px 6px;
-      word-break: break-word;
-    }
-
-    .footer {
-      margin-top: 26px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-    }
+    .wrap { position: relative; z-index: 1; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <div class="topbar">
       <div class="brand">
-        <span class="logoDot"></span>
-        <span>Robin Index Vault</span>
+        <span class="dot"></span>
+        Robin Index Vault
       </div>
       <div class="chain">Robinhood Chain Testnet · 46630</div>
     </div>
 
     <section class="hero">
-      <div class="eyebrow">Public testnet vault · v0.5.1</div>
+      <div class="eyebrow">Public testnet vault · v0.7.0</div>
       <h1>Robin Index Vault</h1>
       <p class="lead">
-        A premium green terminal for ledger-based testnet stock-token deposits,
-        non-transferable rINDEX receipts, transparent treasury buckets, and
-        keeper-managed mock oracle and fee automation.
+        Ledger-based testnet stock-token vault with internal swap, non-transferable rINDEX receipts,
+        transparent treasury buckets, and keeper-managed oracle automation.
       </p>
-
       <div class="badges">
-        <span class="badge">✓ 5 / 5 core contracts verified</span>
+        <span class="badge">✓ 6 / 6 contracts verified</span>
         <span class="badge">✓ Smoke tested</span>
-        <span class="badge">✓ Keeper automation</span>
+        <span class="badge">✓ StockRouter live</span>
         <span class="badge">✓ Fee-funded treasury</span>
       </div>
-
       <div class="actions">
         <a class="btn primary" href="https://robin-index-vault.vercel.app" target="_blank" rel="noreferrer">Open dApp</a>
         <a class="btn" href="https://github.com/Agus-ops/robin-index-vault" target="_blank" rel="noreferrer">View GitHub</a>
-        <a class="btn" href="https://github.com/Agus-ops/robin-index-vault/tree/v0.5.1" target="_blank" rel="noreferrer">View v0.5.1 Tag</a>
+        <a class="btn" href="https://github.com/Agus-ops/robin-index-vault/releases/tag/v0.7.0" target="_blank" rel="noreferrer">v0.7.0 Release</a>
       </div>
     </section>
 
     <section class="grid">
+
       <article class="card third">
-        <h2>Verification</h2>
-        <div class="stat">5 / 5</div>
-        <p class="muted">All core contracts are verified on the Robinhood Testnet explorer.</p>
+        <div class="kicker">Verification</div>
+        <h2>Contracts</h2>
+        <div class="stat">6 / 6</div>
+        <p class="muted">All contracts verified on Robinhood Testnet explorer.</p>
       </article>
 
       <article class="card third">
-        <h2>Vault Value</h2>
+        <div class="kicker">Stock DEX</div>
+        <h2>StockRouter</h2>
         <div class="stat">Live</div>
-        <p class="muted">The public dApp reads current vault ledger, oracle, rINDEX, and treasury state.</p>
+        <p class="muted">Internal swap between stock tokens. Oracle-priced, 1% fee, 10-min cooldown.</p>
       </article>
 
       <article class="card third">
-        <h2>Keeper</h2>
-        <div class="stat">4h</div>
-        <p class="muted">Operator-side keeper handles slow-cadence mock oracle updates and fee sweep checks.</p>
-      </article>
-
-      <article class="card third">
-        <h2>Rewards</h2>
+        <div class="kicker">Rewards</div>
+        <h2>Fee-Funded</h2>
         <div class="stat">Weekly</div>
-        <p class="muted">Fee-funded weekly rewards. Users claim via RewardPanel. No APY, no minting.</p>
+        <p class="muted">Users claim fee rewards weekly. No APY, no minting, no subsidy.</p>
       </article>
 
       <article class="card half">
-        <h2>Core Model</h2>
-        <p class="muted">
-          Deposits stay token-specific inside the vault ledger. A TSLA deposit is tracked as TSLA,
-          an AMZN deposit is tracked as AMZN, and withdrawals return the original deposited asset.
-        </p>
+        <div class="kicker">Core Model</div>
+        <h2>Vault Ledger</h2>
+        <p class="muted">Deposits stay token-specific. A TSLA deposit returns as TSLA. Each asset tracked separately in the on-chain ledger.</p>
         <div class="pillset">
           <span class="asset">TSLA</span>
           <span class="asset">AMZN</span>
@@ -348,11 +164,21 @@
       </article>
 
       <article class="card half">
-        <h2>rINDEX Receipt</h2>
-        <p class="muted">
-          rINDEX is a non-transferable receipt token for ledger-backed vault accounting.
-          It is not a tradable stock token, yield token, or claim on real-world equities.
-        </p>
+        <div class="kicker">Stock DEX</div>
+        <h2>StockRouter Swap</h2>
+        <p class="muted">Swap testnet stock tokens directly via StockRouter. Oracle-based pricing with protocol fee routing.</p>
+        <div class="rows">
+          <div class="row"><span>Fee</span><strong>1% → FeeTreasury</strong></div>
+          <div class="row"><span>Cooldown</span><strong>10 min / wallet</strong></div>
+          <div class="row"><span>Max per swap</span><strong>0.5 token</strong></div>
+          <div class="row"><span>Daily cap</span><strong>1 token / wallet</strong></div>
+        </div>
+      </article>
+
+      <article class="card half">
+        <div class="kicker">Receipt Token</div>
+        <h2>rINDEX</h2>
+        <p class="muted">Non-transferable receipt for ledger-backed vault accounting. Not a tradable stock or yield token.</p>
         <div class="rows">
           <div class="row"><span>Transferability</span><strong>Locked</strong></div>
           <div class="row"><span>Reward model</span><strong>Fee-funded only</strong></div>
@@ -361,8 +187,9 @@
       </article>
 
       <article class="card half">
+        <div class="kicker">Protocol Treasury</div>
         <h2>Treasury Buckets</h2>
-        <p class="muted">Protocol fees are split into transparent buckets.</p>
+        <p class="muted">Protocol fees split into transparent on-chain buckets.</p>
         <div class="rows">
           <div class="row"><span>Protocol Reserve</span><strong>50%</strong></div>
           <div class="row"><span>User Rewards Pool</span><strong>30%</strong></div>
@@ -372,31 +199,51 @@
       </article>
 
       <article class="card half">
-        <h2>Keeper Automation</h2>
-        <p class="muted">
-          The keeper updates mock testnet stock references and checks pending fees.
-          It is designed for testnet accounting, not real-time trading.
-        </p>
+        <div class="kicker">Keeper Automation</div>
+        <h2>Keeper</h2>
+        <p class="muted">Operator keeper handles oracle updates, fee sweep, and router inventory monitoring.</p>
         <div class="rows">
           <div class="row"><span>Default mode</span><strong>Dry-run</strong></div>
           <div class="row"><span>Execution</span><strong><code>EXEC=1</code></strong></div>
           <div class="row"><span>Price guard</span><strong>10%</strong></div>
-          <div class="row"><span>Reviewed override</span><strong><code>FORCE=1</code></strong></div>
+          <div class="row"><span>Override</span><strong><code>FORCE=1</code></strong></div>
+        </div>
+      </article>
+
+      <article class="card half">
+        <div class="kicker">Points System</div>
+        <h2>Leaderboard</h2>
+        <p class="muted">Activity-based points. Leaderboard updated every 30 minutes via keeper.</p>
+        <div class="rows">
+          <div class="row"><span>Deposit</span><strong>+10 pts</strong></div>
+          <div class="row"><span>Withdraw</span><strong>−5 pts</strong></div>
+          <div class="row"><span>Daily Check-in</span><strong>+1 pt</strong></div>
         </div>
       </article>
 
       <article class="card">
-        <h2>Safety Notice</h2>
-        <p class="muted">
-          Robin Index Vault is a testnet builder demo. It does not claim real stock ownership,
-          real-world asset redemption, guaranteed yield, APY, APR, guaranteed rewards,
-          real-time market pricing, or custodial financial service.
-        </p>
+        <div class="kicker">Deployed Contracts</div>
+        <h2>Contract Addresses</h2>
+        <div class="rows" style="margin-top:12px">
+          <div class="row"><span>MockStockOracle</span><strong><code>0xC1c84d45DB3CD10e300CCc84F6900995c2260d1A</code></strong></div>
+          <div class="row"><span>ReceiptToken (rINDEX)</span><strong><code>0x54269f54c3B28e6E23e2D2d79BD8b9c9C501bcC2</code></strong></div>
+          <div class="row"><span>FeeTreasury</span><strong><code>0x05FbC935652605B697522B3f0bd4c14FfBAb8209</code></strong></div>
+          <div class="row"><span>RobinIndexVault</span><strong><code>0x99E535AbCcCF89d6596F5c27cD3244317c1C2450</code></strong></div>
+          <div class="row"><span>RewardDistributor</span><strong><code>0xf559F8511022bBb63137523356d19ec4aCBadd53</code></strong></div>
+          <div class="row"><span>StockRouter</span><strong><code>0x95c7e649D972f34C2a67813c86ed6936F2008149</code></strong></div>
+        </div>
       </article>
+
+      <article class="card">
+        <div class="kicker">Safety Notice</div>
+        <h2>Testnet Demo Only</h2>
+        <p class="muted">Robin Index Vault is a testnet builder demo. It does not claim real stock ownership, real-world asset redemption, guaranteed yield, APY, APR, guaranteed rewards, real-time market pricing, or custodial financial service.</p>
+      </article>
+
     </section>
 
     <div class="footer">
-      Built by Agus-ops · Robin Index Vault v0.5.1 · Keeper Automation
+      Built by Agus-ops · Robin Index Vault v0.7.0 · Robinhood Chain Testnet 46630
     </div>
   </main>
 </body>
