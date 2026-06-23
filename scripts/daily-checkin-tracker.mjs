@@ -10,9 +10,16 @@ const DEPLOY = JSON.parse(
 );
 
 function artifact(name) {
-  return JSON.parse(
-    fs.readFileSync(path.join(ROOT, "artifacts", `${name}.json`), "utf8")
-  );
+  const candidates = [
+    path.join(ROOT, "artifacts", "contracts", `${name}_v0.8.1.sol`, `${name}.json`),
+    path.join(ROOT, "artifacts", "contracts", `${name}_v0.8.0.sol`, `${name}.json`),
+    path.join(ROOT, "artifacts", "contracts", `${name}.sol`, `${name}.json`),
+    path.join(ROOT, "artifacts", `${name}.json`),
+  ];
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, "utf8"));
+  }
+  throw new Error(`artifact not found for ${name}, tried: ${candidates.join(", ")}`);
 }
 
 async function main() {

@@ -8,3 +8,4 @@ second-wallet-local-only.txt
 .env.backup.*
 scripts/supabase-client.mjs
 frontend/src/lib/supabase.js
+data/usdg_faucet_last.json

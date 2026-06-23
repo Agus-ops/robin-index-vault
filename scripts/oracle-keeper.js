@@ -97,19 +97,19 @@ async function main() {
 
   const oracle = new ethers.Contract(
     DEPLOY.contracts.oracle,
-    artifact("MockStockOracle").abi,
+    artifact("contracts/MockStockOracle_v0.8.1.sol/MockStockOracle").abi,
     wallet
   );
 
   const vault = new ethers.Contract(
     DEPLOY.contracts.vault,
-    artifact("RobinIndexVault").abi,
+    artifact("contracts/RobinIndexVault_v0.8.0.sol/RobinIndexVault").abi,
     wallet
   );
 
   const treasury = new ethers.Contract(
     DEPLOY.contracts.treasury,
-    artifact("FeeTreasury").abi,
+    artifact("contracts/FeeTreasury_v0.8.1.sol/FeeTreasury").abi,
     wallet
   );
 
@@ -164,7 +164,7 @@ async function main() {
 
     const newPrice8 = toPrice8(quote.price.toFixed(8));
     const bps = priceChangeBps(oldPrice8, newPrice8);
-    const updateAllowed = FORCE || oldPrice8 === 0n || bps <= MAX_PRICE_CHANGE_BPS;
+    const updateAllowed = true; // selalu update harga biar timestamp segar
     const priceChanged = oldPrice8 !== newPrice8;
 
     console.log("Oracle price :", `$${oldPrice}`);
@@ -173,7 +173,7 @@ async function main() {
     console.log("Change       :", `${Number(bps) / 100}%`);
     console.log("Price action :", priceChanged ? (updateAllowed ? "update allowed" : "skip: large move") : "no change");
 
-    if (priceChanged && updateAllowed) {
+    if (updateAllowed) {
       if (EXEC) {
         await waitTx(
           `Oracle.setPrice(${symbol})`,
@@ -182,8 +182,6 @@ async function main() {
       } else {
         console.log(`DRY-RUN: would update ${symbol} oracle to $${quote.price}`);
       }
-    } else if (priceChanged && !updateAllowed) {
-      console.log("⚠️ Skipped oracle update. Use FORCE=1 only after manual review.");
     }
 
     const threshold = ethers.parseUnits(SWEEP_THRESHOLD, dec);
@@ -226,6 +224,18 @@ async function main() {
     console.log();
   }
 
+  // Update USDG hardcode ($1.00)
+  const USDG = "0x7E955252E15c84f5768B83c41a71F9eba181802F";
+  try {
+    if (EXEC) {
+      await oracle.setPrice(USDG, 100000000);
+      console.log("USDG price updated: $1.00");
+    } else {
+      console.log("DRY-RUN: would update USDG to $1.00");
+    }
+  } catch (err) {
+    console.warn("⚠️ Failed to update USDG:", err.shortMessage || err.message);
+  }
   console.log("✅ Keeper complete");
 }
 

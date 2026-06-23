@@ -40,7 +40,9 @@
     "auto-allocate": "node scripts/auto-allocate.js",
     "daily-tracker": "node scripts/daily-checkin-tracker.mjs",
     "points-tracker": "node scripts/points-tracker.mjs",
-    "router-keeper": "node scripts/router-keeper.mjs"
+    "router-keeper": "node scripts/router-keeper.mjs",
+    "usdg-faucet": "node scripts/usdg-faucet.mjs",
+    "merkle-generator": "node scripts/merkle-generator.mjs"
   },
   "keywords": [],
   "author": "",
@@ -53,6 +55,8 @@
     "dotenv": "^17.4.2",
     "ethers": "^6.16.0",
     "hardhat": "^2.22.19",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.6.0",
     "ws": "^8.21.0"
   },
   "devDependencies": {

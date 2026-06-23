@@ -1,3 +1,4 @@
+import { addPoints } from "./lib/points";
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import "./styles.css";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -152,7 +153,8 @@ function App() {
   async function waitForTx(hash) {
     if (!publicClient || !hash) return;
 
-    await publicClient.waitForTransactionReceipt({ hash });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") { showToast("error", "Transaction failed on-chain", hash); return; }
 
     showToast("success", "Transaction confirmed. Refreshing balances...", hash);
 
@@ -201,7 +203,7 @@ function App() {
         args: [selectedToken.address, parsedAmount],
       });
 
-      showToast("success", `Deposit submitted: ${selectedToken.symbol}`, depositHash);
+      showToast("info", `Deposit submitted: ${selectedToken.symbol}`, depositHash);
       await waitForTx(depositHash);
       await addPoints(address, "deposit").catch(() => {});
       closeModal();
@@ -231,7 +233,7 @@ function App() {
         args: [selectedToken.address, parsedAmount],
       });
 
-      showToast("success", `Withdraw submitted: ${selectedToken.symbol}`, withdrawHash);
+      showToast("info", `Withdraw submitted: ${selectedToken.symbol}`, withdrawHash);
       await waitForTx(withdrawHash);
       await addPoints(address, "withdraw").catch(() => {});
       closeModal();

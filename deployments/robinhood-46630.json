@@ -1,12 +1,14 @@
 {
   "chainId": 46630,
   "contracts": {
-    "oracle": "0xC1c84d45DB3CD10e300CCc84F6900995c2260d1A",
-    "receipt": "0x54269f54c3B28e6E23e2D2d79BD8b9c9C501bcC2",
-    "receiptToken": "0x54269f54c3B28e6E23e2D2d79BD8b9c9C501bcC2",
-    "treasury": "0x05FbC935652605B697522B3f0bd4c14FfBAb8209",
-    "vault": "0x99E535AbCcCF89d6596F5c27cD3244317c1C2450",
-    "rewardDistributor": "0xf559F8511022bBb63137523356d19ec4aCBadd53"
+    "oracle": "0x8161331EBDc18E584Da3aa48Fd4a3A1e90925dd9",
+    "receipt": "0x309f574E459EC4c1Bb45E5801F6310Dc3aD289c9",
+    "receiptToken": "0x309f574E459EC4c1Bb45E5801F6310Dc3aD289c9",
+    "treasury": "0x2398f0bbEc0a2C1bDf7a3158f16cEa32FAf3E7e3",
+    "vault": "0xe5CC46857E94cD23710c8112A334926C80b62E53",
+    "rewardDistributor": "0xA809A5cFCAbb8D5CE8C121eB294788415A35EaC7",
+    "router": "0xcAd87D5B038b41Db85684EC7Dfafc9c5369Ef9f9",
+    "multisig": "0xBff2bbc7e55B705d670b5D30af13A637881C10Db"
   },
   "tokens": {
     "TSLA": { "address": "0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E", "decimals": 18, "isStock": true, "isSettlement": false },

@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   useAccount,
   useReadContract,
@@ -7,7 +7,7 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatUnits, parseAbi } from "viem";
+import { formatUnits, parseAbi, isAddress } from "viem";
 
 import { ADDRESSES } from "../contracts/addresses";
 const TREASURY = ADDRESSES.treasury;
@@ -30,10 +30,8 @@ const rewardAbi = parseAbi([
   "function weekClaimedTotal(address token,uint256 week) view returns (uint256)",
   "function tokenTotalFunded(address token) view returns (uint256)",
   "function tokenTotalClaimed(address token) view returns (uint256)",
-  "function allocation(address user,address token,uint256 week) view returns (uint256)",
-  "function claimed(address user,address token,uint256 week) view returns (uint256)",
-  "function claimable(address user,address token,uint256 week) view returns (uint256)",
-  "function claim(address token,uint256 week)",
+  "function claimed(address user,address token,uint256 week) view returns (bool)",
+  "function claim(address token,uint256 week,uint256 amount,bytes32[] proof)",
 ]);
 
 const erc20Abi = parseAbi([
@@ -57,14 +55,25 @@ function shortAddress(value) {
   return `${value.slice(0, 6)}…${value.slice(-4)}`;
 }
 
-function isPositive(value) {
-  return typeof value === "bigint" && value > 0n;
+function parseProofInput(raw) {
+  if (!raw) return [];
+  return raw
+    .split(/[\s,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function isValidBytes32(s) {
+  return /^0x[0-9a-fA-F]{64}$/.test(s);
 }
 
 export default function RewardPanel() {
   const { address, isConnected } = useAccount();
   const viewer = address || ZERO_ADDRESS;
   const queryClient = useQueryClient();
+
+  // Per-token manual claim input state: { [symbol]: { amount, proofRaw } }
+  const [claimInputs, setClaimInputs] = useState({});
 
   const { data: currentWeek, isLoading: weekLoading } = useReadContract({
     address: REWARD_DISTRIBUTOR,
@@ -84,9 +93,7 @@ export default function RewardPanel() {
       { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "weekClaimedTotal", args: [token.address, currentWeek] },
       { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "tokenTotalFunded", args: [token.address] },
       { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "tokenTotalClaimed", args: [token.address] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "allocation", args: [viewer, token.address, currentWeek] },
       { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "claimed", args: [viewer, token.address, currentWeek] },
-      { address: REWARD_DISTRIBUTOR, abi: rewardAbi, functionName: "claimable", args: [viewer, token.address, currentWeek] },
     ]);
   }, [currentWeek, viewer]);
 
@@ -102,20 +109,10 @@ export default function RewardPanel() {
     query: { enabled: Boolean(txHash) },
   });
 
-  // Auto-refresh setelah claim confirmed
-  useEffect(() => {
-    if (isSuccess) {
-      const t = setTimeout(() => {
-        queryClient.invalidateQueries();
-      }, 2000);
-      return () => clearTimeout(t);
-    }
-  }, [isSuccess, queryClient]);
-
   const rows = useMemo(() => {
     if (!reads || reads.length === 0) return [];
     return TOKENS.map((token, i) => {
-      const base = i * 12;
+      const base = i * 9;
       const tokenConfig = reads[base + 4]?.result;
       const enabled = Array.isArray(tokenConfig) ? tokenConfig[0] : false;
       const cap = Array.isArray(tokenConfig) ? tokenConfig[1] : 0n;
@@ -131,20 +128,43 @@ export default function RewardPanel() {
         weekClaimed: reads[base + 6]?.result,
         totalFunded: reads[base + 7]?.result,
         totalClaimed: reads[base + 8]?.result,
-        allocation: reads[base + 9]?.result,
-        claimed: reads[base + 10]?.result,
-        claimable: reads[base + 11]?.result,
+        alreadyClaimed: reads[base + 9]?.result === true,
       };
     });
   }, [reads]);
 
+  function updateInput(symbol, field, value) {
+    setClaimInputs((prev) => ({
+      ...prev,
+      [symbol]: { ...prev[symbol], [field]: value },
+    }));
+  }
+
   function onClaim(token) {
     if (currentWeek === undefined) return;
+    const input = claimInputs[token.symbol] || {};
+    const amountStr = (input.amount || "").trim();
+    const proofArr = parseProofInput(input.proofRaw);
+
+    if (!amountStr || isNaN(Number(amountStr)) || Number(amountStr) <= 0) {
+      alert("Masukkan amount yang valid (sesuai unit terkecil token, contoh 1000000 untuk 1 USDG).");
+      return;
+    }
+    if (proofArr.length === 0) {
+      alert("Masukkan Merkle proof (array bytes32, pisahkan dengan koma atau baris baru).");
+      return;
+    }
+    const invalid = proofArr.find((p) => !isValidBytes32(p));
+    if (invalid) {
+      alert(`Proof tidak valid: ${invalid}\nSetiap proof harus format 0x + 64 karakter hex.`);
+      return;
+    }
+
     writeContract({
       address: REWARD_DISTRIBUTOR,
       abi: rewardAbi,
       functionName: "claim",
-      args: [token.address, currentWeek],
+      args: [token.address, currentWeek, BigInt(amountStr), proofArr],
     });
   }
 
@@ -160,10 +180,11 @@ export default function RewardPanel() {
     <section className="rewardPanelClean">
       <div className="rewardPanelHead">
         <div>
-          <p className="rewardEyebrow">Fee-funded rewards</p>
+          <p className="rewardEyebrow">Fee-funded rewards · Merkle claim</p>
           <h2>Reward Status</h2>
           <p className="rewardMuted">
-            Fee-funded reward status from the treasury rewards bucket and RewardDistributor.
+            Rewards are now distributed via Merkle tree. Enter your amount and proof
+            (obtained from the rewards API/backend) to claim.
           </p>
         </div>
         <button className="rewardRefreshButton" type="button" onClick={refreshAll} disabled={isRefreshing}>
@@ -197,7 +218,8 @@ export default function RewardPanel() {
       {!isLoading && (
         <div className="rewardAssetGrid">
           {rows.map((row) => {
-            const canClaim = isConnected && isPositive(row.claimable) && !isPending && !isConfirming;
+            const input = claimInputs[row.symbol] || {};
+            const canClaim = isConnected && !row.alreadyClaimed && !isPending && !isConfirming;
             return (
               <article className="rewardAssetCard" key={row.symbol}>
                 <div className="rewardAssetTop">
@@ -212,6 +234,9 @@ export default function RewardPanel() {
                     <span className={row.canDistribute ? "rewardBadge rewardBadgeInfo" : "rewardBadge"}>
                       {row.canDistribute ? "Distributable" : "Below threshold"}
                     </span>
+                    {row.alreadyClaimed && (
+                      <span className="rewardBadge rewardBadgeOk">Claimed this week</span>
+                    )}
                   </div>
                 </div>
 
@@ -234,18 +259,30 @@ export default function RewardPanel() {
                   </div>
                 </div>
 
-                <div className="rewardClaimRow">
-                  <div>
-                    <span>Your claimable</span>
-                    <strong>{fmt(row.claimable, row.decimals)}</strong>
-                  </div>
+                <div className="rewardClaimRow" style={{ flexDirection: "column", alignItems: "stretch", gap: "8px" }}>
+                  <input
+                    type="text"
+                    placeholder={`Amount (smallest unit, e.g. ${row.decimals === 6 ? "1000000" : "1000000000000000000"})`}
+                    value={input.amount || ""}
+                    onChange={(e) => updateInput(row.symbol, "amount", e.target.value)}
+                    disabled={!canClaim}
+                    style={{ padding: "8px", borderRadius: "8px", border: "1px solid #333", background: "#0d0d0d", color: "#eee" }}
+                  />
+                  <textarea
+                    placeholder="Merkle proof (bytes32[], pisahkan koma/baris baru)"
+                    value={input.proofRaw || ""}
+                    onChange={(e) => updateInput(row.symbol, "proofRaw", e.target.value)}
+                    disabled={!canClaim}
+                    rows={3}
+                    style={{ padding: "8px", borderRadius: "8px", border: "1px solid #333", background: "#0d0d0d", color: "#eee", fontFamily: "monospace", fontSize: "12px" }}
+                  />
                   <button
                     className="rewardClaimButton"
                     type="button"
                     disabled={!canClaim}
                     onClick={() => onClaim(row)}
                   >
-                    {isPending || isConfirming ? "Claiming…" : "Claim"}
+                    {isPending || isConfirming ? "Claiming…" : row.alreadyClaimed ? "Already claimed" : "Claim"}
                   </button>
                 </div>
               </article>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract, useEstimateGas } from "wagmi";
 import { formatUnits, parseUnits } from "viem";
 import { ArrowUpDown, Clock, ExternalLink, RefreshCw, Zap } from "lucide-react";
 import { ADDRESSES } from "../contracts/addresses";
@@ -13,7 +13,7 @@ const ROUTER_ABI = [
   { type:"function", name:"lastSwapAt", stateMutability:"view", inputs:[{name:"user",type:"address"}], outputs:[{type:"uint256"}] },
 ];
 
-const SWAP_TOKENS    = TOKENS.filter((t) => ["TSLA","AMZN","NFLX","PLTR","AMD"].includes(t.symbol));
+const SWAP_TOKENS    = TOKENS.filter((t) => ["TSLA","AMZN","NFLX","PLTR","AMD","USDG"].includes(t.symbol));
 const MAX_SINGLE_SWAP = 0.5;
 const COOLDOWN_SECS   = 600;
 
@@ -109,6 +109,15 @@ export function SwapPanel({ data, isConnected, isRightChain }) {
     setTokenOut(t);
   }
 
+  const { data: estimatedGas } = useEstimateGas({
+    address: ADDRESSES.router,
+    abi: ROUTER_ABI,
+    functionName: "swap",
+    args: tokenIn && tokenOut && amountNum > 0 && !isNaN(amountNum)
+      ? [tokenIn.address, tokenOut.address, parseUnits(String(amountNum), tokenIn.decimals), 0n]
+      : undefined,
+    query: { enabled: Boolean(tokenIn && tokenOut && amountNum > 0 && !isNaN(amountNum)) },
+  });
   async function runSwap(){
     if (!address||!publicClient||!amount||busy) return;
     if (cooldownLeft>0)                     { showToast("error",`Cooldown active — wait ${fmtCountdown(cooldownLeft)}`); return; }
@@ -124,9 +133,10 @@ export function SwapPanel({ data, isConnected, isRightChain }) {
         await publicClient.waitForTransactionReceipt({hash:ah});
         showToast("info","Approve confirmed. Proceeding with swap…",ah);
       }
-      const sh=await writeContractAsync({address:ADDRESSES.router,abi:ROUTER_ABI,functionName:"swap",args:[tokenIn.address,tokenOut.address,parsed,0n]});
+      const sh=await writeContractAsync({address:ADDRESSES.router,abi:ROUTER_ABI,functionName:"swap",args:[tokenIn.address,tokenOut.address,parsed,0n],gas:(estimatedGas && estimatedGas > 250000n) ? (estimatedGas * 130n / 100n) : 350000n});
       showToast("info","Swap submitted…",sh);
-      await publicClient.waitForTransactionReceipt({hash:sh});
+      const receipt=await publicClient.waitForTransactionReceipt({hash:sh});
+      if(receipt.status==="reverted"){showToast("error","Swap gagal on-chain",sh);setBusy(false);return;}
       showToast("success",`Swap ${tokenIn.symbol} → ${tokenOut.symbol} confirmed ✓`,sh);
       setLastTx(sh); setAmount(""); await checkCooldown();
     } catch(err) {

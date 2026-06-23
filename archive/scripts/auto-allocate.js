@@ -1,3 +1,4 @@
+import { loadArtifact } from "./lib/artifact-loader.mjs";
 import fs from "fs";
 import path from "path";
 import "dotenv/config";
@@ -9,9 +10,7 @@ const DEPLOY = JSON.parse(
 );
 
 function artifact(name) {
-  return JSON.parse(
-    fs.readFileSync(path.join(ROOT, "artifacts", `${name}.json`), "utf8")
-  );
+  return loadArtifact(ROOT, name);
 }
 
 const STOCKS = ["TSLA", "AMZN", "NFLX", "PLTR", "AMD"];

@@ -1,5 +1,6 @@
 import { DailyCheckIn } from "./DailyCheckIn";
 import { TOKENS } from "../contracts/tokens";
+const VAULT_TOKENS = TOKENS;
 
 // Kita asumsikan Loader2 di-import dari lucide-react jika menggunakan template standar Vite dApps
 import { Loader2 } from "lucide-react";
@@ -70,7 +71,7 @@ export function SummaryLedger({
       )}
 
       <div className="assetList">
-        {(TOKENS || []).map((token) => {
+        {(VAULT_TOKENS || []).map((token) => {
           const fresh = data?.fresh?.[token.symbol];
           const depositDisabled = !isConnected || !isRightChain || data?.paused || fresh === false;
           const withdrawDisabled = !isConnected || !isRightChain;

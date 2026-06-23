@@ -39,6 +39,7 @@ abstract contract Context {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -140,6 +141,7 @@ abstract contract Ownable is Context {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (utils/introspection/IERC165.sol)
 
+pragma solidity >=0.4.16;
 
 /**
  * @dev Interface of the ERC-165 standard, as defined in the
@@ -168,6 +170,7 @@ interface IERC165 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (interfaces/IERC165.sol)
 
+pragma solidity >=0.4.16;
 
 
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v5.6.1
@@ -175,6 +178,7 @@ interface IERC165 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (token/ERC20/IERC20.sol)
 
+pragma solidity >=0.4.16;
 
 /**
  * @dev Interface of the ERC-20 standard as defined in the ERC.
@@ -257,6 +261,7 @@ interface IERC20 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (interfaces/IERC20.sol)
 
+pragma solidity >=0.4.16;
 
 
 // File @openzeppelin/contracts/interfaces/IERC1363.sol@v5.6.1
@@ -264,6 +269,7 @@ interface IERC20 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.4.0) (interfaces/IERC1363.sol)
 
+pragma solidity >=0.6.2;
 
 
 /**
@@ -351,6 +357,7 @@ interface IERC1363 is IERC20, IERC165 {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.5.0) (token/ERC20/utils/SafeERC20.sol)
 
+pragma solidity ^0.8.20;
 
 
 /**
@@ -633,6 +640,7 @@ library SafeERC20 {
 // OpenZeppelin Contracts (last updated v5.6.0) (utils/math/SafeCast.sol)
 // This file was procedurally generated from scripts/generate/templates/SafeCast.js.
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Wrappers over Solidity's uintXX/intXX/bool casting operators with added overflow
@@ -1797,6 +1805,7 @@ library SafeCast {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.1.0) (utils/Panic.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Helper library for emitting standardized panic codes.
@@ -1857,6 +1866,7 @@ library Panic {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.6.0) (utils/math/Math.sol)
 
+pragma solidity ^0.8.20;
 
 
 /**
@@ -2622,6 +2632,7 @@ library Math {
 // OpenZeppelin Contracts (last updated v5.1.0) (utils/StorageSlot.sol)
 // This file was procedurally generated from scripts/generate/templates/StorageSlot.js.
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Library for reading and writing primitive types to specific storage slots.
@@ -2767,6 +2778,7 @@ library StorageSlot {
 // Original license: SPDX_License_Identifier: MIT
 // OpenZeppelin Contracts (last updated v5.5.0) (utils/ReentrancyGuard.sol)
 
+pragma solidity ^0.8.20;
 
 /**
  * @dev Contract module that helps prevent reentrant calls to a function.
@@ -2885,6 +2897,7 @@ abstract contract ReentrancyGuard {
 // File contracts/StockRouter.sol
 
 // Original license: SPDX_License_Identifier: MIT
+pragma solidity 0.8.34;
 
 
 
@@ -2898,10 +2911,8 @@ interface IStockOracle {
 contract StockRouter is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    // ---------- Constants ----------
-    uint16 public constant MAX_FEE_BPS = 500;   // 5%
+    uint16 public constant MAX_FEE_BPS = 500;
 
-    // ---------- Storage ----------
     IStockOracle public oracle;
     address public treasury;
     mapping(address => bool) public keepers;
@@ -2909,6 +2920,7 @@ contract StockRouter is Ownable, ReentrancyGuard {
 
     struct TokenConfig {
         bool supported;
+        uint8 decimals;
         uint256 maxSingleSwap;
         uint256 dailyCap;
         uint256 minInventory;
@@ -2916,7 +2928,7 @@ contract StockRouter is Ownable, ReentrancyGuard {
     }
     mapping(address => TokenConfig) public tokenConfig;
 
-    uint16 public swapFeeBps = 100;         // 1%
+    uint16 public swapFeeBps = 100;
     uint256 public cooldown = 10 minutes;
     uint256 public perPairDailyCap = 2e18;
 
@@ -2925,12 +2937,11 @@ contract StockRouter is Ownable, ReentrancyGuard {
     mapping(address => uint256) public lastSwapAt;
     mapping(address => bool) public lowAlertTriggered;
 
-    // ---------- Events ----------
     event Swapped(address indexed user, address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, uint256 fee);
     event InventoryRestocked(address indexed token, uint256 amount);
     event InventoryWithdrawn(address indexed token, uint256 amount);
     event LowInventoryAlert(address indexed token, uint256 remaining);
-    event TokenConfigUpdated(address indexed token, bool supported, uint256 maxSingleSwap, uint256 dailyCap, uint256 minInventory, uint256 lowInventoryAlert);
+    event TokenConfigUpdated(address indexed token, bool supported, uint8 decimals, uint256 maxSingleSwap, uint256 dailyCap, uint256 minInventory, uint256 lowInventoryAlert);
     event KeeperUpdated(address indexed keeper, bool enabled);
     event SwapFeeUpdated(uint16 feeBps);
     event CooldownUpdated(uint256 cooldown);
@@ -2941,7 +2952,6 @@ contract StockRouter is Ownable, ReentrancyGuard {
     event Unpaused(address indexed account);
     event EmergencyRecovered(address indexed token, address indexed to, uint256 amount);
 
-    // ---------- Modifiers ----------
     modifier onlyKeeperOrOwner() {
         require(msg.sender == owner() || keepers[msg.sender], "!keeper");
         _;
@@ -2959,14 +2969,14 @@ contract StockRouter is Ownable, ReentrancyGuard {
         keepers[msg.sender] = true;
     }
 
-    // ---------- Admin ----------
-    function setTokenConfig(address token, bool supported, uint256 maxSingleSwap_, uint256 dailyCap_, uint256 minInventory_, uint256 lowInventoryAlert_) external onlyOwner {
+    function setTokenConfig(address token, bool supported, uint8 decimals_, uint256 maxSingleSwap_, uint256 dailyCap_, uint256 minInventory_, uint256 lowInventoryAlert_) external onlyOwner {
         if (supported) {
+            require(decimals_ <= 18, "decimals > 18");
             require(maxSingleSwap_ > 0 && dailyCap_ > 0 && minInventory_ > 0, "invalid config");
-            require(lowInventoryAlert_ >= minInventory_, "alert < minInventory");
+            require(lowInventoryAlert_ > minInventory_, "alert must be > minInventory");
         }
-        tokenConfig[token] = TokenConfig(supported, maxSingleSwap_, dailyCap_, minInventory_, lowInventoryAlert_);
-        emit TokenConfigUpdated(token, supported, maxSingleSwap_, dailyCap_, minInventory_, lowInventoryAlert_);
+        tokenConfig[token] = TokenConfig(supported, decimals_, maxSingleSwap_, dailyCap_, minInventory_, lowInventoryAlert_);
+        emit TokenConfigUpdated(token, supported, decimals_, maxSingleSwap_, dailyCap_, minInventory_, lowInventoryAlert_);
     }
 
     function setSwapFeeBps(uint16 _fee) external onlyOwner {
@@ -3043,65 +3053,67 @@ contract StockRouter is Ownable, ReentrancyGuard {
         emit Unpaused(msg.sender);
     }
 
-    // ---------- Swap ----------
     function swap(address tokenIn, address tokenOut, uint256 amountIn, uint256 minAmountOut)
         external nonReentrant whenNotPaused
     {
-        // 1. Validasi token
         TokenConfig memory cfgIn = tokenConfig[tokenIn];
         TokenConfig memory cfgOut = tokenConfig[tokenOut];
         require(cfgIn.supported && cfgOut.supported, "unsupported");
         require(tokenIn != tokenOut, "same token");
 
-        // 2. Cooldown
         require(block.timestamp >= lastSwapAt[msg.sender] + cooldown, "cooldown");
 
-        // 3. Oracle fresh & harga > 0
         require(oracle.isFresh(tokenIn) && oracle.isFresh(tokenOut), "stale");
         uint256 priceIn = oracle.getPrice(tokenIn);
         uint256 priceOut = oracle.getPrice(tokenOut);
         require(priceIn > 0 && priceOut > 0, "price=0");
 
-        // 4. Transfer tokenIn (setelah validasi ringan)
         uint256 balBefore = IERC20(tokenIn).balanceOf(address(this));
         IERC20(tokenIn).safeTransferFrom(msg.sender, address(this), amountIn);
         uint256 received = IERC20(tokenIn).balanceOf(address(this)) - balBefore;
         require(received > 0, "zero received");
 
-        // 5. Guard harian & caps (pakai received)
         uint256 day = block.timestamp / 1 days;
+        uint256 normalizedReceived = received * (10 ** (18 - cfgIn.decimals));
+        uint256 normalizedCap = cfgIn.dailyCap * (10 ** (18 - cfgIn.decimals));
+        
         uint256 userVol = userDailyVolume[msg.sender][day];
-        require(userVol + received <= cfgIn.dailyCap, "user daily cap");
+        require(userVol + normalizedReceived <= normalizedCap, "user daily cap");
+        
         bytes32 pairKey = keccak256(abi.encode(tokenIn, tokenOut));
         uint256 pairVol = pairDailyVolume[pairKey][day];
-        require(pairVol + received <= perPairDailyCap, "pair daily cap");
+        require(pairVol + normalizedReceived <= perPairDailyCap, "pair daily cap");
+        
         require(received <= cfgIn.maxSingleSwap, "max single swap");
 
-        // 6. Hitung amountOut (18 decimals token → sederhana)
         uint256 amountOut = Math.mulDiv(received, priceIn, priceOut);
+        if (cfgIn.decimals > cfgOut.decimals) {
+            amountOut /= (10 ** (cfgIn.decimals - cfgOut.decimals));
+        } else if (cfgIn.decimals < cfgOut.decimals) {
+            amountOut *= (10 ** (cfgOut.decimals - cfgIn.decimals));
+        }
 
         uint256 fee = (amountOut * swapFeeBps) / 10000;
         uint256 amountOutAfterFee = amountOut - fee;
         require(amountOutAfterFee >= minAmountOut, "slippage");
 
-        // 7. Cek inventory riil (pakai amountOut, bukan amountOutAfterFee)
         uint256 inventoryOut = IERC20(tokenOut).balanceOf(address(this));
         require(inventoryOut >= amountOut + cfgOut.minInventory, "low inventory");
+        
         uint256 remainingInventory = inventoryOut - amountOut;
-        if (remainingInventory < cfgOut.lowInventoryAlert && !lowAlertTriggered[tokenOut]) {
-            lowAlertTriggered[tokenOut] = true;
-            emit LowInventoryAlert(tokenOut, remainingInventory);
-        }
-        if (remainingInventory >= cfgOut.lowInventoryAlert) {
+        if (remainingInventory < cfgOut.lowInventoryAlert) {
+            if (!lowAlertTriggered[tokenOut]) {
+                lowAlertTriggered[tokenOut] = true;
+                emit LowInventoryAlert(tokenOut, remainingInventory);
+            }
+        } else {
             lowAlertTriggered[tokenOut] = false;
         }
 
-        // 8. Update state (CEI)
-        userDailyVolume[msg.sender][day] = userVol + received;
-        pairDailyVolume[pairKey][day] = pairVol + received;
+        userDailyVolume[msg.sender][day] = userVol + normalizedReceived;
+        pairDailyVolume[pairKey][day] = pairVol + normalizedReceived;
         lastSwapAt[msg.sender] = block.timestamp;
 
-        // 9. Transfer keluar
         IERC20(tokenOut).safeTransfer(msg.sender, amountOutAfterFee);
         if (fee > 0) {
             IERC20(tokenOut).safeTransfer(treasury, fee);
