@@ -7,7 +7,7 @@ const FAUCET_URL = "https://api.sandbox.paxos.com/v2/treasury/faucet/transfers";
 const WALLET = process.env.WALLET_ADDRESS || "0xD2F9f6381Fb5f00c2fC606553592dB28309c019d";
 
 // Cooldown antar klaim faucet
-const COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 jam
+const COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12 jam
 
 async function main() {
   const now = new Date();
